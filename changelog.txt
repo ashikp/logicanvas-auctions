@@ -1,0 +1,28 @@
+=== Logicanvas Auctions for WooCommerce — Changelog ===
+
+= 1.1.0 =
+Release date: 2026-09-08
+
+* Frontend edit listing flow with REST PUT/PATCH for draft, rejected, pending review, and scheduled auctions.
+* Single auction page: gallery lightbox, Details/Share tabs (no verification UI), QR codes, edit listing button, formatted HTML content, fulfilment notes.
+* Account edit view with prefilled submit form; listings Edit links use the seller dashboard (no wp-admin edit_post requirement).
+* SeoCompat registered at runtime for Yoast-friendly auction singles.
+* QR code script (wcap-qrcode) enqueued with frontend assets; copy/copied i18n strings.
+* Product sync on draft update uses ProductSync::create_or_update_product and sync_images.
+* CPT rewrite slug changed from `auction` to `auctions` (rewrite flush on upgrade).
+* Dashboard CSS spacing and softer indigo-themed shadows.
+* AuctionInputSanitizer: allowlisted fields, script-safe HTML (wp_kses_post + extra strip), fixed enums/ints/money decimals on create/update and admin editor.
+* Classic Editor for auction CPT in wp-admin; frontend create keeps textareas; dedicated seller edit page uses Classic Editor like admin.
+* Frontend edit listing layout fixed (no lead-form grid crush); wp-admin auction editor restored with product, gallery, and full settings meta boxes.
+* Icon + text admin actions with shared reason/confirm popup (Auctions, Holders, Bids).
+* Admin review/rating popup every 2 weeks (snooze or mark already reviewed).
+
+= 1.0.0 =
+Release date: 2026-08-01
+
+* First public release on WordPress.org.
+* Timed and live auctions with server-authoritative bidding.
+* Soft close, awards, payment deadlines, and WooCommerce winner checkout.
+* Commission / settlement ledger with manual payout tracking.
+* Shortcodes, optional Elementor widgets, REST polling, privacy tools, and WP-CLI.
+* Holder applications, bidder dashboards, and dedicated login flows.

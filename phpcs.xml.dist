@@ -1,0 +1,13 @@
+<ruleset name="Logicanvas Auctions for WooCommerce">
+	<description>WordPress coding standards for Logicanvas Auctions for WooCommerce.</description>
+	<file>logicanvas-auctions.php</file>
+	<file>uninstall.php</file>
+	<file>src</file>
+	<exclude-pattern>*/vendor/*</exclude-pattern>
+	<rule ref="WordPress">
+		<exclude name="WordPress.Files.FileName"/>
+	</rule>
+	<config name="minimum_supported_wp_version" value="6.4"/>
+	<arg name="extensions" value="php"/>
+	<arg value="s"/>
+</ruleset>

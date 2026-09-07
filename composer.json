@@ -1,0 +1,38 @@
+{
+	"name": "logicanvas/logicanvas-auctions",
+	"description": "Timed and live auctions for WooCommerce.",
+	"type": "wordpress-plugin",
+	"license": "GPL-2.0-or-later",
+	"homepage": "https://wordpress.org/plugins/logicanvas-auctions/",
+	"authors": [
+		{
+			"name": "Logicanvas.io",
+			"homepage": "https://plugins.logicanvas.io"
+		}
+	],
+	"require": {
+		"php": ">=8.1"
+	},
+	"require-dev": {
+		"phpunit/phpunit": "^10.5",
+		"phpstan/phpstan": "^1.11",
+		"squizlabs/php_codesniffer": "^3.10",
+		"wp-coding-standards/wpcs": "^3.1",
+		"dealerdirect/phpcodesniffer-composer-installer": "^1.0"
+	},
+	"autoload": {
+		"psr-4": {
+			"LogicanvasAuctions\\": "src/"
+		}
+	},
+	"scripts": {
+		"test": "phpunit --testsuite unit",
+		"phpstan": "phpstan analyse --memory-limit=1G",
+		"phpcs": "phpcs"
+	},
+	"config": {
+		"allow-plugins": {
+			"dealerdirect/phpcodesniffer-composer-installer": true
+		}
+	}
+}

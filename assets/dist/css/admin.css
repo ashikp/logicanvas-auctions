@@ -1,0 +1,783 @@
+.wcap-admin{
+	--wcap-a:#4f46e5;
+	--wcap-ink:#0f172a;
+	--wcap-muted:#64748b;
+	--wcap-line:#e2e8f0;
+	max-width:1180px;
+}
+.wcap-admin__hero{
+	display:flex;
+	justify-content:space-between;
+	gap:24px;
+	align-items:flex-end;
+	margin:8px 0 20px;
+	padding:28px 28px 26px;
+	border-radius:20px;
+	background:
+		radial-gradient(800px 180px at 90% -20%, rgba(165,180,252,.55), transparent 50%),
+		linear-gradient(135deg,#0f172a 0%,#1e1b4b 58%,#312e81 100%);
+	color:#fff;
+}
+.wcap-admin__hero-brand{display:flex;flex-direction:column;gap:14px;min-width:0}
+.wcap-admin__logo{
+	display:block;
+	width:auto !important;
+	max-width:180px !important;
+	height:auto !important;
+	max-height:48px !important;
+	object-fit:contain;
+	object-position:left center;
+}
+.wcap-admin__kicker{
+	margin:0 0 6px;
+	font-size:11px;
+	letter-spacing:.12em;
+	text-transform:uppercase;
+	color:#c7d2fe;
+}
+.wcap-admin__hero h1{
+	margin:0;
+	color:#fff;
+	font-size:28px;
+	line-height:1.2;
+	padding:0;
+}
+.wcap-admin__lede{
+	margin:8px 0 0;
+	max-width:46rem;
+	color:#cbd5e1;
+}
+.wcap-admin__hero-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.wcap-admin__btn,
+.wcap-admin .wcap-admin__btn{
+	display:inline-flex;
+	align-items:center;
+	min-height:40px;
+	padding:0 16px;
+	border-radius:999px;
+	background:#4f46e5;
+	color:#fff !important;
+	text-decoration:none;
+	font-weight:600;
+	box-shadow:0 8px 18px rgba(79,70,229,.28);
+}
+.wcap-admin__btn:hover{color:#fff !important;background:#4338ca}
+.wcap-admin__btn--ghost,
+.wcap-admin .wcap-admin__btn--ghost{
+	background:transparent;
+	border:1px solid rgba(255,255,255,.35);
+	box-shadow:none;
+	color:#fff !important;
+}
+.wcap-admin__btn--ghost:hover{background:rgba(255,255,255,.1);color:#fff !important}
+.wcap-admin__body{display:grid;gap:16px}
+.wcap-admin__panel{
+	background:#fff;
+	border:1px solid var(--wcap-line);
+	border-radius:16px;
+	padding:20px;
+	box-shadow:0 8px 24px rgba(15,23,42,.04);
+}
+.wcap-admin__stats{
+	display:grid;
+	grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+	gap:12px;
+}
+.wcap-admin__stat{
+	padding:18px;
+	border:1px solid var(--wcap-line);
+	border-radius:16px;
+	background:#fff;
+}
+.wcap-admin__stat span{
+	display:block;
+	color:var(--wcap-muted);
+	font-size:12px;
+	text-transform:uppercase;
+	letter-spacing:.04em;
+}
+.wcap-admin__stat b{
+	display:block;
+	margin-top:8px;
+	font-size:28px;
+	letter-spacing:-.03em;
+	color:var(--wcap-ink);
+}
+.wcap-admin__stat-hint{
+	display:block;
+	margin-top:6px;
+	font-style:normal;
+	font-size:12px;
+	color:var(--wcap-muted);
+}
+.wcap-admin table.widefat{
+	border:0;
+	border-radius:12px;
+	overflow:hidden;
+	box-shadow:none;
+}
+.wcap-admin table.widefat th{
+	font-size:11px;
+	text-transform:uppercase;
+	letter-spacing:.04em;
+	color:#64748b;
+}
+.wcap-admin td > form,
+.wcap-admin .wcap-admin-inline-form{
+	display:inline-flex;
+	gap:6px;
+	align-items:center;
+	flex-wrap:wrap;
+	margin:0 6px 6px 0;
+}
+.wcap-admin input[type="text"]{
+	border-radius:8px;
+	min-height:32px;
+}
+.wcap-admin .form-table th{padding-top:18px}
+.wcap-admin .form-table td{padding:14px 10px}
+.wcap-admin .button-primary{
+	background:#4f46e5;
+	border-color:#4f46e5;
+	border-radius:999px;
+	padding:0 16px;
+}
+.wcap-admin .button-primary:hover{background:#4338ca;border-color:#4338ca}
+.wcap-admin__pages{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;list-style:none;margin:12px 0 0;padding:0}
+.wcap-admin__pages li{
+	margin:0;
+	padding:12px 14px;
+	border:1px solid var(--wcap-line);
+	border-radius:12px;
+	background:#f8fafc;
+}
+.wcap-product-source label{display:inline-block;margin-right:1.5rem}
+.wcap-product-new,.wcap-product-existing{margin-top:12px}
+#wcap_auction_product .inside,#wcap_auction_settings .inside{
+	padding:16px 14px 18px;
+}
+#wcap_auction_product,#wcap_auction_settings{
+	border-radius:12px;
+	border-color:#e2e8f0;
+}
+
+/* Settlements */
+.wcap-settle-panel__head{
+	display:flex;
+	justify-content:space-between;
+	gap:16px;
+	align-items:flex-start;
+	margin-bottom:18px;
+	padding-bottom:14px;
+	border-bottom:1px solid var(--wcap-line);
+}
+.wcap-settle-panel__head h2{
+	margin:0 0 6px;
+	font-size:18px;
+	color:var(--wcap-ink);
+}
+.wcap-settle-panel__head p{
+	margin:0;
+	max-width:52rem;
+	color:var(--wcap-muted);
+	font-size:13px;
+	line-height:1.5;
+}
+.wcap-settle-empty{
+	padding:28px 16px;
+	text-align:center;
+	color:var(--wcap-muted);
+	background:#f8fafc;
+	border:1px dashed var(--wcap-line);
+	border-radius:12px;
+}
+.wcap-payout-cards{display:grid;gap:16px}
+.wcap-payout-card{
+	border:1px solid var(--wcap-line);
+	border-radius:14px;
+	background:#fff;
+	overflow:hidden;
+}
+.wcap-payout-card__top{
+	display:flex;
+	justify-content:space-between;
+	gap:16px;
+	align-items:flex-start;
+	padding:16px 20px;
+	background:#f8fafc;
+	border-bottom:1px solid var(--wcap-line);
+}
+.wcap-payout-card__who{display:flex;flex-direction:column;gap:2px;min-width:0}
+.wcap-payout-card__id{
+	font-size:11px;
+	font-weight:700;
+	letter-spacing:.06em;
+	text-transform:uppercase;
+	color:var(--wcap-muted);
+}
+.wcap-payout-card__who strong{
+	font-size:16px;
+	color:var(--wcap-ink);
+}
+.wcap-payout-card__meta{
+	font-size:12px;
+	color:var(--wcap-muted);
+}
+.wcap-payout-card__amount{
+	display:flex;
+	flex-direction:column;
+	align-items:flex-end;
+	gap:8px;
+	flex-shrink:0;
+}
+.wcap-payout-card__amount b{
+	font-size:22px;
+	letter-spacing:-.03em;
+	color:var(--wcap-ink);
+	line-height:1;
+}
+.wcap-payout-card__body{
+	display:grid;
+	grid-template-columns:1.15fr .85fr;
+	gap:0;
+}
+.wcap-payout-card__method,
+.wcap-payout-card__side{
+	padding:18px 20px;
+	min-width:0;
+}
+.wcap-payout-card__method{border-right:1px solid var(--wcap-line)}
+.wcap-payout-card__label{
+	display:block;
+	margin:0 0 8px;
+	font-size:11px;
+	font-weight:700;
+	letter-spacing:.05em;
+	text-transform:uppercase;
+	color:var(--wcap-muted);
+}
+.wcap-payout-card__method-name{
+	display:block;
+	margin:0 0 12px;
+	font-size:14px;
+	color:var(--wcap-ink);
+}
+.wcap-payout-details{
+	margin:0;
+	padding:12px 14px;
+	border-radius:10px;
+	background:#f1f5f9;
+	display:grid;
+	gap:8px;
+}
+.wcap-payout-details > div{
+	display:grid;
+	grid-template-columns:minmax(90px,120px) 1fr;
+	gap:8px;
+	align-items:baseline;
+}
+.wcap-payout-details dt{
+	margin:0;
+	font-size:12px;
+	color:var(--wcap-muted);
+}
+.wcap-payout-details dd{
+	margin:0;
+	font-size:13px;
+	font-weight:600;
+	color:var(--wcap-ink);
+	word-break:break-word;
+}
+.wcap-payout-card__note{
+	margin:12px 0 0;
+	padding:10px 12px;
+	border-radius:8px;
+	background:#fff7ed;
+	border:1px solid #fed7aa;
+	font-size:13px;
+	color:#9a3412;
+}
+.wcap-payout-card__note span{
+	display:block;
+	margin-bottom:4px;
+	font-size:11px;
+	font-weight:700;
+	text-transform:uppercase;
+	letter-spacing:.04em;
+	color:#c2410c;
+}
+.wcap-payout-card__meta-list{
+	margin:0;
+	display:grid;
+	gap:12px;
+}
+.wcap-payout-card__meta-list > div{margin:0}
+.wcap-payout-card__meta-list dt{
+	margin:0 0 2px;
+	font-size:11px;
+	text-transform:uppercase;
+	letter-spacing:.04em;
+	color:var(--wcap-muted);
+}
+.wcap-payout-card__meta-list dd{
+	margin:0;
+	font-size:13px;
+	color:var(--wcap-ink);
+	word-break:break-word;
+}
+.wcap-payout-card__footer{
+	padding:18px 20px 20px;
+	border-top:1px solid var(--wcap-line);
+	background:#fafbfc;
+}
+.wcap-payout-form__intro{margin:0 0 14px}
+.wcap-payout-form__intro h3{
+	margin:0 0 4px;
+	font-size:14px;
+	color:var(--wcap-ink);
+}
+.wcap-payout-form__intro p{
+	margin:0;
+	font-size:13px;
+	color:var(--wcap-muted);
+}
+.wcap-admin .wcap-payout-form,
+.wcap-payout-form{
+	display:block !important;
+	width:100% !important;
+	margin:0 !important;
+	float:none !important;
+}
+.wcap-payout-form__grid{
+	display:grid;
+	grid-template-columns:1fr 1fr;
+	gap:14px 16px;
+	margin:0 0 14px;
+}
+.wcap-payout-form__field{
+	display:flex;
+	flex-direction:column;
+	gap:6px;
+	min-width:0;
+}
+.wcap-payout-form__field--full{grid-column:1 / -1}
+.wcap-admin .wcap-payout-form__field label,
+.wcap-payout-form__field label{
+	display:block !important;
+	float:none !important;
+	width:auto !important;
+	margin:0 !important;
+	padding:0 !important;
+	font-size:12px;
+	font-weight:600;
+	color:var(--wcap-muted);
+}
+.wcap-admin .wcap-payout-form__field input[type="text"],
+.wcap-admin .wcap-payout-form__field textarea,
+.wcap-payout-form__field input[type="text"],
+.wcap-payout-form__field textarea{
+	display:block !important;
+	width:100% !important;
+	max-width:100% !important;
+	box-sizing:border-box;
+	margin:0 !important;
+	border:1px solid var(--wcap-line);
+	border-radius:8px;
+	padding:10px 12px;
+	min-height:40px;
+	background:#fff;
+	box-shadow:none;
+}
+.wcap-payout-form__field textarea{min-height:88px;resize:vertical;line-height:1.45}
+.wcap-payout-form__field input[type="file"]{
+	display:block;
+	width:100%;
+	max-width:100%;
+	padding:8px 0;
+	box-sizing:border-box;
+}
+.wcap-payout-card__btns{
+	display:flex;
+	flex-wrap:wrap;
+	gap:8px;
+	align-items:center;
+}
+.wcap-payout-card__btns .button{
+	border-radius:8px !important;
+	margin:0 !important;
+}
+.wcap-btn-danger{
+	color:#b91c1c !important;
+	border-color:#fecaca !important;
+	background:#fff !important;
+}
+.wcap-btn-danger:hover{
+	background:#fef2f2 !important;
+	border-color:#f87171 !important;
+	color:#991b1b !important;
+}
+.wcap-status-badge{
+	display:inline-flex;
+	align-items:center;
+	min-height:24px;
+	padding:0 10px;
+	border-radius:999px;
+	font-size:11px;
+	font-weight:700;
+	letter-spacing:.03em;
+	text-transform:uppercase;
+	background:#e2e8f0;
+	color:#334155;
+}
+.wcap-status-badge.is-pending{background:#fef3c7;color:#92400e}
+.wcap-status-badge.is-approved{background:#dbeafe;color:#1e40af}
+.wcap-status-badge.is-paid{background:#dcfce7;color:#166534}
+.wcap-status-badge.is-rejected,
+.wcap-status-badge.is-cancelled,
+.wcap-status-badge.is-reversed{background:#fee2e2;color:#991b1b}
+.wcap-status-badge.is-disputed{background:#ffedd5;color:#9a3412}
+.wcap-settle-table-wrap{
+	overflow-x:auto;
+	border:1px solid var(--wcap-line);
+	border-radius:12px;
+}
+.wcap-settle-table{
+	width:100%;
+	border-collapse:collapse;
+	margin:0;
+	background:#fff;
+}
+.wcap-settle-table th,
+.wcap-settle-table td{
+	padding:12px 14px;
+	text-align:left;
+	border-bottom:1px solid var(--wcap-line);
+	vertical-align:middle;
+	font-size:13px;
+}
+.wcap-settle-table th{
+	background:#f8fafc;
+	font-size:11px;
+	text-transform:uppercase;
+	letter-spacing:.04em;
+	color:var(--wcap-muted);
+	white-space:nowrap;
+}
+.wcap-settle-table tbody tr:last-child td{border-bottom:0}
+.wcap-settle-table tbody tr:hover{background:#fafbfc}
+.wcap-settle-table .is-num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.wcap-settle-table .is-strong{font-weight:700;color:var(--wcap-ink)}
+.wcap-settle-table .is-muted{color:var(--wcap-muted)}
+.wcap-settle-table .is-actions{width:1%;white-space:nowrap}
+.wcap-settle-inline-form{
+	display:inline-flex !important;
+	margin:0 !important;
+}
+.wcap-settle-inline-form .button{
+	border-radius:8px !important;
+	margin:0 !important;
+}
+.wcap-settle-dash{color:#cbd5e1}
+.wcap-payout-proof-line{margin:0 0 12px;font-size:13px;color:var(--wcap-ink)}
+.wcap-payout-proof-empty{margin:0 0 12px;font-size:13px;color:var(--wcap-muted)}
+.wcap-payout-proof-current{margin:4px 0 0;font-size:12px}
+@media (max-width:960px){
+	.wcap-payout-card__body{grid-template-columns:1fr}
+	.wcap-payout-card__method{border-right:0;border-bottom:1px solid var(--wcap-line)}
+	.wcap-payout-details > div{grid-template-columns:1fr}
+	.wcap-payout-card__top{flex-direction:column}
+	.wcap-payout-card__amount{align-items:flex-start}
+	.wcap-payout-form__grid{grid-template-columns:1fr}
+}
+
+/* Auction CPT editor gallery */
+.wcap-gallery-admin{
+	display:flex;
+	flex-wrap:wrap;
+	gap:10px;
+	margin:12px 0;
+	min-height:24px;
+}
+.wcap-gallery-admin__item{
+	position:relative;
+	width:96px;
+	height:96px;
+	border:1px solid #e2e8f0;
+	border-radius:10px;
+	overflow:hidden;
+	background:#f8fafc;
+}
+.wcap-gallery-admin__item img{
+	display:block;
+	width:100%;
+	height:100%;
+	object-fit:cover;
+}
+.wcap-gallery-admin__remove{
+	position:absolute !important;
+	top:4px;
+	right:4px;
+	width:24px;
+	height:24px;
+	border:0 !important;
+	border-radius:999px !important;
+	background:#0f172a !important;
+	color:#fff !important;
+	font-size:16px !important;
+	line-height:1 !important;
+	cursor:pointer;
+	text-decoration:none !important;
+}
+.wcap-product-source{margin:0 0 12px;padding:12px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc}
+.wcap-product-source label{display:inline-flex;align-items:center;gap:6px;margin-right:14px}
+#wcap_auction_settings .widefat{max-width:100%}
+
+/* --- Icon + text admin actions + reason modal --- */
+.wcap-actions{
+	display:flex;
+	flex-wrap:wrap;
+	gap:6px;
+	align-items:center;
+	max-width:360px;
+}
+.wcap-actions__empty{color:#94a3b8}
+.wcap-action-btn{
+	display:inline-flex !important;
+	align-items:center;
+	gap:6px;
+	margin:0 !important;
+	padding:6px 10px !important;
+	border:1px solid #e2e8f0 !important;
+	border-radius:999px !important;
+	background:#fff !important;
+	color:#0f172a !important;
+	font-size:12px !important;
+	font-weight:600 !important;
+	line-height:1.2 !important;
+	cursor:pointer;
+	box-shadow:0 1px 2px rgba(15,23,42,.04);
+	transition:background .15s ease,border-color .15s ease,color .15s ease,box-shadow .15s ease;
+}
+.wcap-action-btn .dashicons{
+	width:16px;
+	height:16px;
+	font-size:16px;
+	line-height:1;
+}
+.wcap-action-btn:hover{
+	border-color:#c7d2fe !important;
+	box-shadow:0 4px 12px rgba(79,70,229,.12);
+}
+.wcap-action-btn--success{color:#047857 !important;border-color:#a7f3d0 !important;background:#ecfdf5 !important}
+.wcap-action-btn--success:hover{background:#d1fae5 !important}
+.wcap-action-btn--danger{color:#b91c1c !important;border-color:#fecaca !important;background:#fef2f2 !important}
+.wcap-action-btn--danger:hover{background:#fee2e2 !important}
+.wcap-action-btn--warn{color:#b45309 !important;border-color:#fde68a !important;background:#fffbeb !important}
+.wcap-action-btn--warn:hover{background:#fef3c7 !important}
+.wcap-action-btn--neutral{color:#4338ca !important;border-color:#c7d2fe !important;background:#eef2ff !important}
+.wcap-state-pill{
+	display:inline-flex;
+	padding:2px 8px;
+	border-radius:999px;
+	background:#eef2ff;
+	color:#4338ca;
+	font-size:11px;
+	font-weight:700;
+	letter-spacing:.02em;
+	text-transform:uppercase;
+}
+.wcap-admin-table td .wcap-actions{white-space:normal}
+body.wcap-action-modal-open{overflow:hidden}
+.wcap-action-modal[hidden]{display:none !important}
+.wcap-action-modal{
+	position:fixed;
+	inset:0;
+	z-index:100000;
+	display:flex;
+	align-items:center;
+	justify-content:center;
+	padding:24px;
+}
+.wcap-action-modal__backdrop{
+	position:absolute;
+	inset:0;
+	background:rgba(15,23,42,.55);
+}
+.wcap-action-modal__dialog{
+	position:relative;
+	z-index:1;
+	width:100%;
+	max-width:440px;
+	background:#fff;
+	border-radius:16px;
+	box-shadow:0 24px 64px rgba(15,23,42,.28);
+	overflow:hidden;
+}
+.wcap-action-modal__head{
+	display:flex;
+	align-items:flex-start;
+	justify-content:space-between;
+	gap:12px;
+	padding:18px 20px 12px;
+	border-bottom:1px solid #e2e8f0;
+}
+.wcap-action-modal__head h2{
+	margin:0;
+	padding:0;
+	font-size:18px;
+	line-height:1.3;
+	color:#0f172a;
+}
+.wcap-action-modal__x{
+	border:0;
+	background:transparent;
+	font-size:24px;
+	line-height:1;
+	cursor:pointer;
+	color:#64748b;
+	padding:0 2px;
+}
+.wcap-action-modal__body{padding:16px 20px 8px}
+.wcap-action-modal__confirm{
+	margin:0 0 12px;
+	color:#475569;
+	font-size:14px;
+	line-height:1.5;
+}
+.wcap-action-modal__reason{
+	display:flex;
+	flex-direction:column;
+	gap:6px;
+	font-size:12px;
+	font-weight:600;
+	color:#64748b;
+	text-transform:uppercase;
+	letter-spacing:.04em;
+}
+.wcap-action-modal__reason textarea{
+	width:100%;
+	min-height:96px;
+	padding:10px 12px;
+	border:1px solid #e2e8f0;
+	border-radius:10px;
+	font:400 14px/1.45 inherit;
+	color:#0f172a;
+	text-transform:none;
+	letter-spacing:normal;
+	resize:vertical;
+}
+.wcap-action-modal__reason textarea:focus{
+	border-color:#818cf8;
+	outline:none;
+	box-shadow:0 0 0 2px rgba(99,102,241,.2);
+}
+.wcap-action-modal__foot{
+	display:flex;
+	justify-content:flex-end;
+	gap:8px;
+	padding:12px 20px 18px;
+	border-top:1px solid #e2e8f0;
+	background:#f8fafc;
+}
+
+/* --- Review / rating prompt (every 2 weeks) --- */
+body.wcap-review-prompt-open{overflow:hidden}
+.wcap-review-prompt[hidden]{display:none !important}
+.wcap-review-prompt{
+	position:fixed;
+	inset:0;
+	z-index:100100;
+	display:flex;
+	align-items:center;
+	justify-content:center;
+	padding:24px;
+}
+.wcap-review-prompt__backdrop{
+	position:absolute;
+	inset:0;
+	background:rgba(15,23,42,.55);
+}
+.wcap-review-prompt__dialog{
+	position:relative;
+	z-index:1;
+	width:100%;
+	max-width:420px;
+	padding:28px 28px 22px;
+	border-radius:18px;
+	background:#fff;
+	box-shadow:0 28px 70px rgba(15,23,42,.3);
+	text-align:center;
+}
+.wcap-review-prompt__x{
+	position:absolute;
+	top:10px;
+	right:12px;
+	border:0;
+	background:transparent;
+	font-size:24px;
+	line-height:1;
+	color:#94a3b8;
+	cursor:pointer;
+}
+.wcap-review-prompt__badge{
+	display:inline-flex;
+	margin:0 0 10px;
+	padding:6px 12px;
+	border-radius:999px;
+	background:#eef2ff;
+	color:#4f46e5;
+	font-size:14px;
+	letter-spacing:.12em;
+}
+.wcap-review-prompt__dialog h2{
+	margin:0 0 10px;
+	padding:0;
+	font-size:22px;
+	line-height:1.25;
+	color:#0f172a;
+}
+.wcap-review-prompt__dialog > p{
+	margin:0 0 16px;
+	color:#475569;
+	font-size:14px;
+	line-height:1.55;
+}
+.wcap-review-prompt__stars{
+	display:flex;
+	justify-content:center;
+	gap:4px;
+	margin:0 0 18px;
+	color:#f59e0b;
+	font-size:28px;
+	line-height:1;
+}
+.wcap-review-prompt__actions{
+	display:flex;
+	flex-direction:column;
+	gap:8px;
+	align-items:stretch;
+}
+.wcap-review-prompt__actions .button{
+	justify-content:center;
+	height:auto !important;
+	min-height:40px;
+	padding:8px 14px !important;
+	border-radius:999px !important;
+}
+.wcap-review-prompt__rate{
+	background:#4f46e5 !important;
+	border-color:#4f46e5 !important;
+	color:#fff !important;
+	font-weight:600;
+}
+.wcap-review-prompt__rate:hover{background:#4338ca !important;border-color:#4338ca !important;color:#fff !important}
+.wcap-review-prompt__done{
+	margin-top:4px !important;
+	color:#64748b !important;
+	text-decoration:underline;
+}
+.wcap-review-prompt__fine{
+	margin:14px 0 0 !important;
+	font-size:11px !important;
+	color:#94a3b8 !important;
+}

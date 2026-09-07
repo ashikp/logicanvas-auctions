@@ -1,0 +1,2244 @@
+{
+  "meta": {
+    "schema_version": "1.0.0",
+    "generated_for": "Logicanvas Auctions for WooCommerce",
+    "plugin_slug": "logicanvas-auctions",
+    "plugin_version": "1.0.0",
+    "text_domain": "logicanvas-auctions",
+    "author": "Logicanvas.io",
+    "docs_uri": "https://docs.logicanvas.io/logicanvas-auctions",
+    "plugin_uri": "https://wordpress.org/plugins/logicanvas-auctions/",
+    "license": "GPL-2.0-or-later",
+    "locale_default": "en_US",
+    "requires": {
+      "wordpress": "6.4+",
+      "php": "8.1+",
+      "woocommerce": "8.0+",
+      "elementor": "optional"
+    },
+    "rest_namespace": "logicanvas-auctions/v1",
+    "prefix": "wcap_",
+    "roles": {
+      "holder": "wcap_auction_holder",
+      "bidder": "wcap_auction_bidder"
+    },
+    "notes": [
+      "Elementor is optional. Core auctions work with shortcodes and theme templates.",
+      "WooCommerce is required. Payments always go through WooCommerce gateways.",
+      "Do not install alongside the branded auction-platform plugin; both use the wcap_ table prefix.",
+      "Setup is a single Create auction pages action (not a multi-step wizard). Existing mapped pages are skipped."
+    ],
+    "db_version": "1.0.2",
+    "options": {
+      "settings": "wcap_settings",
+      "pages": "wcap_pages",
+      "db_version": "wcap_db_version",
+      "uninstall": "wcap_remove_data_on_uninstall"
+    },
+    "cpt": "wcap_auction",
+    "admin_menu": {
+      "top": {
+        "slug": "wcap-dashboard",
+        "title": "Auctions",
+        "capability": "moderate_auctions"
+      },
+      "submenus": [
+        {
+          "slug": "wcap-dashboard",
+          "title": "Dashboard"
+        },
+        {
+          "slug": "wcap-add-auction",
+          "title": "Add Auction"
+        },
+        {
+          "slug": "wcap-auctions",
+          "title": "All Auctions"
+        },
+        {
+          "slug": "wcap-holders",
+          "title": "Holders"
+        },
+        {
+          "slug": "wcap-bids",
+          "title": "Bids"
+        },
+        {
+          "slug": "wcap-awards",
+          "title": "Awards"
+        },
+        {
+          "slug": "wcap-settlements",
+          "title": "Settlements"
+        },
+        {
+          "slug": "wcap-settings",
+          "title": "Settings"
+        },
+        {
+          "slug": "wcap-diagnostics",
+          "title": "Diagnostics"
+        },
+        {
+          "slug": "wcap-setup",
+          "title": "Setup Wizard"
+        }
+      ]
+    }
+  },
+  "audiences": [
+    {
+      "id": "visitor",
+      "label": "Visitor / guest"
+    },
+    {
+      "id": "bidder",
+      "label": "Bidder / buyer"
+    },
+    {
+      "id": "holder",
+      "label": "Auction holder / seller"
+    },
+    {
+      "id": "admin",
+      "label": "Site administrator"
+    },
+    {
+      "id": "developer",
+      "label": "Developer / integrator"
+    }
+  ],
+  "faq": [
+    {
+      "id": "faq-what-is-logicanvas-auctions",
+      "category": "general",
+      "audiences": [
+        "visitor",
+        "admin"
+      ],
+      "question": "What is Logicanvas Auctions for WooCommerce?",
+      "answer": "Logicanvas Auctions for WooCommerce is a WooCommerce plugin for timed and live auctions. Store owners and approved third-party holders can list lots. Registered bidders place bids on the server. Winners pay through normal WooCommerce checkout, tax, shipping, and payment gateways.",
+      "tags": [
+        "overview",
+        "woocommerce"
+      ]
+    },
+    {
+      "id": "faq-woocommerce-required",
+      "category": "requirements",
+      "audiences": [
+        "admin"
+      ],
+      "question": "Is WooCommerce required?",
+      "answer": "Yes. WooCommerce must be installed and active. The plugin shows an admin notice and fails gracefully if WooCommerce is missing. It never stores card numbers and never bypasses your store’s payment gateways.",
+      "tags": [
+        "woocommerce",
+        "payments"
+      ]
+    },
+    {
+      "id": "faq-elementor-required",
+      "category": "requirements",
+      "audiences": [
+        "admin"
+      ],
+      "question": "Is Elementor required?",
+      "answer": "No. Elementor is optional. Shortcodes, templates, REST endpoints, and dashboards work without Elementor. If Elementor is active, dedicated widgets and dynamic tags become available.",
+      "tags": [
+        "elementor",
+        "shortcodes"
+      ]
+    },
+    {
+      "id": "faq-php-wp-versions",
+      "category": "requirements",
+      "audiences": [
+        "admin",
+        "developer"
+      ],
+      "question": "What versions are supported?",
+      "answer": "WordPress 6.4 or newer, PHP 8.1 or newer, and WooCommerce 8.0 or newer. HPOS (High-Performance Order Storage) and block checkout compatibility are declared.",
+      "tags": [
+        "compatibility",
+        "hpos"
+      ]
+    },
+    {
+      "id": "faq-timed-vs-live",
+      "category": "auctions",
+      "audiences": [
+        "visitor",
+        "bidder",
+        "holder",
+        "admin"
+      ],
+      "question": "What is the difference between timed and live auctions?",
+      "answer": "A timed auction runs for a fixed start and end window. Bidders place bids until the auction closes automatically (with optional soft-close extensions). A live auction uses a lobby and live room controlled by the holder: open lobby, start, pause/resume, going once/twice, extend, sell, mark unsold, or cancel. In both modes the server—not the browser—is authoritative for price, winner, and state.",
+      "tags": [
+        "timed",
+        "live"
+      ]
+    },
+    {
+      "id": "faq-who-can-list",
+      "category": "holders",
+      "audiences": [
+        "holder",
+        "admin"
+      ],
+      "question": "Who can create auctions?",
+      "answer": "Site administrators can create and manage auctions. Third-party users must apply to become an auction holder, be approved by an administrator, and then create or submit auctions from the holder dashboard. Suspended holders cannot publish or host.",
+      "tags": [
+        "holder",
+        "roles"
+      ]
+    },
+    {
+      "id": "faq-holder-apply",
+      "category": "holders",
+      "audiences": [
+        "visitor",
+        "holder"
+      ],
+      "question": "How do I become an auction holder?",
+      "answer": "Open the Become an auction holder page (created by Setup, shortcode [wcap_holder_apply]), submit the application, and wait for administrator approval. Statuses are pending, approved, rejected, or suspended.",
+      "tags": [
+        "holder",
+        "apply"
+      ]
+    },
+    {
+      "id": "faq-who-can-bid",
+      "category": "bidding",
+      "audiences": [
+        "bidder",
+        "visitor"
+      ],
+      "question": "Who can place a bid?",
+      "answer": "Authenticated users with bidding capability can bid on auctions they are allowed to access. Guests can usually view public auctions but must log in (or register) before bidding. Nobody may bid on their own auction, including administrators acting as holders.",
+      "tags": [
+        "bidding",
+        "login"
+      ]
+    },
+    {
+      "id": "faq-self-bidding",
+      "category": "bidding",
+      "audiences": [
+        "holder",
+        "admin",
+        "bidder"
+      ],
+      "question": "Can I bid on my own auction?",
+      "answer": "No. Self-bidding is always rejected by the server, even if the user has both holder and bidder capabilities.",
+      "tags": [
+        "bidding",
+        "security"
+      ]
+    },
+    {
+      "id": "faq-how-bids-work",
+      "category": "bidding",
+      "audiences": [
+        "bidder"
+      ],
+      "question": "How are bids accepted?",
+      "answer": "Every bid is validated on the server: auction state, time window, eligibility, currency, minimum increment, rate limits, and idempotency. The auction row is locked during acceptance. Duplicate clicks with the same idempotency key return the original result instead of creating another bid. The first valid committed bid wins a tie.",
+      "tags": [
+        "bidding",
+        "concurrency"
+      ]
+    },
+    {
+      "id": "faq-soft-close",
+      "category": "bidding",
+      "audiences": [
+        "bidder",
+        "holder",
+        "admin"
+      ],
+      "question": "What is soft close (anti-sniping)?",
+      "answer": "On timed auctions, if a valid bid arrives within the last soft-close window (default 120 seconds), the end time is extended (default +120 seconds), up to a maximum number of extensions (default 20). The new end time is stored and broadcast from the server.",
+      "tags": [
+        "soft-close",
+        "timed"
+      ]
+    },
+    {
+      "id": "faq-reserve",
+      "category": "bidding",
+      "audiences": [
+        "bidder",
+        "holder",
+        "admin"
+      ],
+      "question": "What happens if the reserve is not met?",
+      "answer": "If the auction ends below the reserve price, it can close as reserve not met / unsold according to the state machine. Public displays typically show only whether the reserve is met, not the hidden reserve amount (configurable reserve display policy).",
+      "tags": [
+        "reserve"
+      ]
+    },
+    {
+      "id": "faq-proxy-bidding",
+      "category": "bidding",
+      "audiences": [
+        "bidder",
+        "admin"
+      ],
+      "question": "Is proxy (maximum) bidding available?",
+      "answer": "Proxy / maximum bidding for timed auctions exists as a strategy but is off by default in settings. It is not enabled for live auctions by default. Maximum values stay private.",
+      "tags": [
+        "proxy",
+        "settings"
+      ]
+    },
+    {
+      "id": "faq-visibility",
+      "category": "auctions",
+      "audiences": [
+        "holder",
+        "admin"
+      ],
+      "question": "What visibility options exist?",
+      "answer": "Public (listed), unlisted (share link, not in public listings), and private/invite-only (invitation required). Invitation tokens are stored as hashes, can expire or be revoked, and never replace authentication for bidding.",
+      "tags": [
+        "visibility",
+        "invitations"
+      ]
+    },
+    {
+      "id": "faq-winner-payment",
+      "category": "payments",
+      "audiences": [
+        "bidder",
+        "holder",
+        "admin"
+      ],
+      "question": "How does the winner pay?",
+      "answer": "When an auction closes with a winner, an award record is created with the final amount and a payment deadline (default 48 hours). Only that winner can start checkout. Quantity is locked to one and the line price is the awarded amount. Taxes and shipping use WooCommerce. Coupons and mixed carts can be disallowed in settings.",
+      "tags": [
+        "checkout",
+        "award",
+        "woocommerce"
+      ]
+    },
+    {
+      "id": "faq-payment-default",
+      "category": "payments",
+      "audiences": [
+        "bidder",
+        "holder",
+        "admin"
+      ],
+      "question": "What if the winner does not pay?",
+      "answer": "After the payment deadline, the award can be marked defaulted. The plugin does not automatically charge bidders. It does not automatically offer the lot to a runner-up unless that policy is explicitly enabled.",
+      "tags": [
+        "deadline",
+        "default"
+      ]
+    },
+    {
+      "id": "faq-commission-payouts",
+      "category": "settlements",
+      "audiences": [
+        "holder",
+        "admin"
+      ],
+      "question": "How do commissions and seller payouts work?",
+      "answer": "The website is the checkout merchant. Each auction records its holder. Settlements track gross amount, commission, fees, refunds, net amount, and payout status. V1 supports manual payout tracking (pending, approved, paid, reversed, disputed). There is no automatic marketplace payout (for example Stripe Connect) in this edition; a payout provider interface exists for later integrations. Holders can request payouts and upload proof where the UI allows; administrators manage settlement status.",
+      "tags": [
+        "commission",
+        "payouts"
+      ]
+    },
+    {
+      "id": "faq-currency",
+      "category": "settlements",
+      "audiences": [
+        "admin"
+      ],
+      "question": "What currency is used?",
+      "answer": "Each auction is locked to the store currency at creation. If the store currency changes later, mixed-currency settlement should be blocked until handled explicitly. Multi-currency auction settlement needs a dedicated integration.",
+      "tags": [
+        "currency"
+      ]
+    },
+    {
+      "id": "faq-setup-pages",
+      "category": "setup",
+      "audiences": [
+        "admin"
+      ],
+      "question": "How do I create the frontend pages?",
+      "answer": "In wp-admin open Auctions → Setup and click Create auction pages. The wizard creates ordinary WordPress pages with shortcodes. You can edit them in the block editor or Elementor. Deleted pages are not recreated automatically unless you run setup again for missing keys.",
+      "tags": [
+        "setup",
+        "pages"
+      ]
+    },
+    {
+      "id": "faq-shortcodes-list",
+      "category": "setup",
+      "audiences": [
+        "admin",
+        "developer"
+      ],
+      "question": "Which shortcodes are available?",
+      "answer": "wcap_auction_grid, wcap_single_auction, wcap_live_room, wcap_live_host, wcap_submit_auction, wcap_holder_dashboard, wcap_bidder_dashboard, wcap_my_bids, wcap_my_wins, wcap_pay_award, wcap_holder_apply, wcap_login, wcap_register, wcap_countdown, wcap_bid_panel, wcap_bid_history. See the shortcodes section in guided docs for attributes.",
+      "tags": [
+        "shortcodes"
+      ]
+    },
+    {
+      "id": "faq-live-sync",
+      "category": "live",
+      "audiences": [
+        "bidder",
+        "holder",
+        "admin"
+      ],
+      "question": "How do live rooms stay in sync?",
+      "answer": "The default realtime mode is authenticated REST polling by event sequence (about 1 second while live, slower in lobby/paused). Push providers can notify clients that new state exists, but clients must still load authoritative state from WordPress. A push message cannot accept a bid or declare a winner.",
+      "tags": [
+        "live",
+        "realtime",
+        "polling"
+      ]
+    },
+    {
+      "id": "faq-cron",
+      "category": "troubleshooting",
+      "audiences": [
+        "admin"
+      ],
+      "question": "Auctions did not close on time. Why?",
+      "answer": "Closing uses WooCommerce Action Scheduler (WP-Cron fallback). If cron is delayed, opening an auction page or state endpoint after end time still runs an idempotent close. Check WooCommerce → Status → Scheduled Actions and hosting cron reliability.",
+      "tags": [
+        "cron",
+        "action-scheduler"
+      ]
+    },
+    {
+      "id": "faq-uninstall",
+      "category": "data",
+      "audiences": [
+        "admin"
+      ],
+      "question": "Does uninstall delete my data?",
+      "answer": "Deactivation never deletes business data. Uninstall deletes tables and auction posts only if Remove all plugin data on uninstall is enabled in settings (default is off).",
+      "tags": [
+        "uninstall",
+        "privacy"
+      ]
+    },
+    {
+      "id": "faq-privacy",
+      "category": "privacy",
+      "audiences": [
+        "admin",
+        "bidder"
+      ],
+      "question": "How is personal data handled?",
+      "answer": "The plugin integrates with WordPress personal data export and erase tools. Financial/transaction rows may be anonymized rather than deleted when retention requires them. Public bidder identities are masked/aliased. IP addresses can be hashed. Terms acceptance can record timestamp and terms version.",
+      "tags": [
+        "privacy",
+        "gdpr"
+      ]
+    },
+    {
+      "id": "faq-theme-override",
+      "category": "customization",
+      "audiences": [
+        "developer",
+        "admin"
+      ],
+      "question": "Can I override templates?",
+      "answer": "Yes. Copy templates into your-theme/logicanvas-auctions/ using the same relative paths as the plugin templates/ folder.",
+      "tags": [
+        "templates",
+        "theme"
+      ]
+    },
+    {
+      "id": "faq-conflict-auction-platform",
+      "category": "troubleshooting",
+      "audiences": [
+        "admin",
+        "developer"
+      ],
+      "question": "Can I run this with another auction-platform plugin?",
+      "answer": "Do not activate this edition on a site that already runs the branded auction-platform plugin. They share the wcap_ table prefix and must not be installed together.",
+      "tags": [
+        "conflict"
+      ]
+    },
+    {
+      "id": "faq-cards",
+      "category": "payments",
+      "audiences": [
+        "admin",
+        "bidder"
+      ],
+      "question": "Does the plugin store credit card details?",
+      "answer": "No. Payments are processed only through configured WooCommerce gateways. The plugin never collects or stores raw card details.",
+      "tags": [
+        "payments",
+        "security"
+      ]
+    },
+    {
+      "id": "faq-admin-menus",
+      "category": "admin",
+      "audiences": [
+        "admin"
+      ],
+      "question": "Where do I manage auctions in wp-admin?",
+      "answer": "Under the Auctions menu (wcap-dashboard): Dashboard, Add Auction, All Auctions, Holders, Bids, Awards, Settlements, Settings, Diagnostics, and Setup Wizard. Exact items depend on capabilities.",
+      "tags": [
+        "admin"
+      ]
+    },
+    {
+      "id": "faq-login-page",
+      "category": "accounts",
+      "audiences": [
+        "bidder",
+        "holder",
+        "admin"
+      ],
+      "question": "Is there a dedicated login page?",
+      "answer": "Yes. Setup creates a Log in page with [wcap_login] for login, register, lost password, and reset flows. Settings can redirect users to holder/bidder dashboards after login and optionally restrict wp-admin for those roles.",
+      "tags": [
+        "login",
+        "accounts"
+      ]
+    },
+    {
+      "id": "faq-notifications",
+      "category": "notifications",
+      "audiences": [
+        "bidder",
+        "holder",
+        "admin"
+      ],
+      "question": "Which emails are sent?",
+      "answer": "Notifications cover approval/rejection, scheduling, live start, bid accepted, outbid, reserve met (without revealing hidden reserve), extensions, winner, unsuccessful bidders, payment reminders, deadline expiry, payment received, holder sale, settlement updates, and cancellations. Users may manage preferences where offered. Noisy live-session emails can be throttled.",
+      "tags": [
+        "email",
+        "notifications"
+      ]
+    },
+    {
+      "id": "faq-rest",
+      "category": "developer",
+      "audiences": [
+        "developer"
+      ],
+      "question": "Is there a REST API?",
+      "answer": "Yes. Namespace logicanvas-auctions/v1. Cookie authentication plus a REST nonce is required for write routes. Public GET responses hide private fields such as emails, IPs, and proxy maxima.",
+      "tags": [
+        "rest",
+        "api"
+      ]
+    },
+    {
+      "id": "faq-wp-cli",
+      "category": "developer",
+      "audiences": [
+        "developer",
+        "admin"
+      ],
+      "question": "Are WP-CLI commands available?",
+      "answer": "Yes: wp logicanvas-auctions list, close, overdue, rebuild, schema, diagnostics, reschedule, migrate.",
+      "tags": [
+        "wp-cli"
+      ]
+    },
+    {
+      "id": "faq-when-can-i-bid",
+      "category": "bidding",
+      "audiences": [
+        "bidder"
+      ],
+      "question": "When does an auction accept bids?",
+      "answer": "Timed auctions accept bids only while active. Live auctions accept bids while live, going once, or going twice. A bid during going once/twice can reset the live state back to live. Lobby and paused states do not accept bidding.",
+      "tags": [
+        "bidding",
+        "live",
+        "timed"
+      ]
+    }
+  ],
+  "guides": [
+    {
+      "id": "guide-install-activate",
+      "title": "Install and activate Logicanvas Auctions for WooCommerce",
+      "audience": [
+        "admin"
+      ],
+      "difficulty": "beginner",
+      "estimated_minutes": 10,
+      "prerequisites": [
+        "WordPress 6.4+",
+        "PHP 8.1+",
+        "WooCommerce 8.0+ installed"
+      ],
+      "steps": [
+        {
+          "id": "1",
+          "title": "Install WooCommerce",
+          "body": "Install and activate WooCommerce. Configure store currency, tax, shipping, and at least one payment gateway."
+        },
+        {
+          "id": "2",
+          "title": "Install Logicanvas Auctions for WooCommerce",
+          "body": "Upload the logicanvas-auctions plugin ZIP or copy the logicanvas-auctions folder into wp-content/plugins/."
+        },
+        {
+          "id": "3",
+          "title": "Activate the plugin",
+          "body": "Activate Logicanvas Auctions for WooCommerce. Confirm there is no conflicting auction-platform plugin active."
+        },
+        {
+          "id": "4",
+          "title": "Run Setup",
+          "body": "Go to Auctions → Setup and create the frontend pages."
+        },
+        {
+          "id": "5",
+          "title": "Verify scheduler",
+          "body": "Confirm Action Scheduler / WP-Cron is healthy under WooCommerce → Status → Scheduled Actions so auctions close and payment reminders run on time."
+        }
+      ],
+      "related_faq": [
+        "faq-woocommerce-required",
+        "faq-setup-pages",
+        "faq-cron"
+      ],
+      "related_guides": [
+        "guide-setup-pages",
+        "guide-admin-settings"
+      ]
+    },
+    {
+      "id": "guide-setup-pages",
+      "title": "Create and assign frontend pages",
+      "audience": [
+        "admin"
+      ],
+      "difficulty": "beginner",
+      "estimated_minutes": 15,
+      "prerequisites": [
+        "Plugin activated",
+        "manage_auction_settings capability"
+      ],
+      "steps": [
+        {
+          "id": "1",
+          "title": "Open the wizard",
+          "body": "In wp-admin open Auctions → Setup."
+        },
+        {
+          "id": "2",
+          "title": "Create pages",
+          "body": "Click Create auction pages. This is a single action (not multi-step). The wizard creates ordinary WordPress pages and stores their IDs in the wcap_pages option. Existing mapped page IDs that still exist are skipped."
+        },
+        {
+          "id": "3",
+          "title": "Review assigned pages",
+          "body": "Confirm keys are assigned: archive, single, live, submit, holder, bidder, my_bids, my_wins, pay, terms, apply, login."
+        },
+        {
+          "id": "4",
+          "title": "Edit page content",
+          "body": "Edit any page in the block editor or Elementor. Keep the shortcode (or widget) that powers the feature. Customize surrounding layout as needed."
+        },
+        {
+          "id": "5",
+          "title": "Publish auction terms",
+          "body": "Replace the placeholder on the Auction terms page with your legal terms. Terms version is tracked in settings (terms_version)."
+        }
+      ],
+      "pages_created": [
+        {
+          "key": "archive",
+          "title": "Auctions",
+          "shortcode": "[wcap_auction_grid]"
+        },
+        {
+          "key": "single",
+          "title": "Auction",
+          "shortcode": "[wcap_single_auction]"
+        },
+        {
+          "key": "live",
+          "title": "Live auction",
+          "shortcode": "[wcap_live_room]"
+        },
+        {
+          "key": "submit",
+          "title": "Submit auction",
+          "shortcode": "[wcap_submit_auction]"
+        },
+        {
+          "key": "holder",
+          "title": "Auction holder dashboard",
+          "shortcode": "[wcap_holder_dashboard]"
+        },
+        {
+          "key": "bidder",
+          "title": "Bidder dashboard",
+          "shortcode": "[wcap_bidder_dashboard]"
+        },
+        {
+          "key": "my_bids",
+          "title": "My bids",
+          "shortcode": "[wcap_my_bids]"
+        },
+        {
+          "key": "my_wins",
+          "title": "My wins",
+          "shortcode": "[wcap_my_wins]"
+        },
+        {
+          "key": "pay",
+          "title": "Pay for won auction",
+          "shortcode": "[wcap_pay_award]"
+        },
+        {
+          "key": "terms",
+          "title": "Auction terms",
+          "shortcode": null,
+          "content": "Editable terms HTML"
+        },
+        {
+          "key": "apply",
+          "title": "Become an auction holder",
+          "shortcode": "[wcap_holder_apply]"
+        },
+        {
+          "key": "login",
+          "title": "Log in",
+          "shortcode": "[wcap_login]",
+          "slug": "login"
+        }
+      ],
+      "related_faq": [
+        "faq-setup-pages",
+        "faq-shortcodes-list"
+      ],
+      "related_guides": [
+        "guide-shortcodes",
+        "guide-elementor"
+      ]
+    },
+    {
+      "id": "guide-admin-settings",
+      "title": "Configure auction settings",
+      "audience": [
+        "admin"
+      ],
+      "difficulty": "beginner",
+      "estimated_minutes": 20,
+      "prerequisites": [
+        "Plugin activated"
+      ],
+      "steps": [
+        {
+          "id": "1",
+          "title": "Open settings",
+          "body": "Go to Auctions → Settings."
+        },
+        {
+          "id": "2",
+          "title": "Set bidding defaults",
+          "body": "Configure default minimum increment, soft-close window, soft-close extension length, and max extensions."
+        },
+        {
+          "id": "3",
+          "title": "Set payment deadline",
+          "body": "Choose payment_deadline_hours (default 48) so winners know how long they have to pay."
+        },
+        {
+          "id": "4",
+          "title": "Configure commission",
+          "body": "Set commission_fixed, commission_percent, and commission_minimum used when calculating holder settlements."
+        },
+        {
+          "id": "5",
+          "title": "Checkout rules",
+          "body": "Decide whether coupons are allowed on auction checkout and whether auction wins may mix with normal cart items."
+        },
+        {
+          "id": "6",
+          "title": "Account and privacy options",
+          "body": "Optionally redirect logins to dashboards, restrict wp-admin for holders/bidders, hash IP addresses, and control uninstall data removal."
+        }
+      ],
+      "default_settings": {
+        "currency_lock": true,
+        "timed_default_duration": 604800,
+        "soft_close_window": 120,
+        "soft_close_extend": 120,
+        "soft_close_max_extensions": 20,
+        "payment_deadline_hours": 48,
+        "min_increment": "1.00",
+        "proxy_bidding_enabled": false,
+        "allow_coupons_on_auction": false,
+        "allow_mixed_cart": false,
+        "commission_fixed": "0.00",
+        "commission_percent": "10.00",
+        "commission_minimum": "0.00",
+        "reserve_display": "met_only",
+        "bidder_alias_mode": "first_last_initial",
+        "remove_data_on_uninstall": false,
+        "hash_ip_addresses": true,
+        "offer_runner_up_auto": false,
+        "live_poll_interval_ms": 1000,
+        "lobby_poll_interval_ms": 4000,
+        "realtime_mode": "polling",
+        "require_terms": true,
+        "terms_version": "1.0"
+      },
+      "related_faq": [
+        "faq-soft-close",
+        "faq-commission-payouts",
+        "faq-currency"
+      ],
+      "related_guides": [
+        "guide-timed-auction-admin",
+        "guide-settlements-admin"
+      ]
+    },
+    {
+      "id": "guide-roles-capabilities",
+      "title": "Understand roles and capabilities",
+      "audience": [
+        "admin"
+      ],
+      "difficulty": "intermediate",
+      "estimated_minutes": 10,
+      "prerequisites": [],
+      "steps": [
+        {
+          "id": "1",
+          "title": "Know the domain roles",
+          "body": "The plugin adds wcap_auction_holder and wcap_auction_bidder. Administrators receive all plugin capabilities."
+        },
+        {
+          "id": "2",
+          "title": "Authorize by capability",
+          "body": "Permission checks use capabilities (not hard-coded role names)."
+        },
+        {
+          "id": "3",
+          "title": "Remember self-bid ban",
+          "body": "Holders also receive bidder capabilities but still cannot bid on their own auctions."
+        }
+      ],
+      "capabilities": [
+        {
+          "cap": "read_auctions",
+          "purpose": "View allowed auctions"
+        },
+        {
+          "cap": "bid_on_auctions",
+          "purpose": "Place bids"
+        },
+        {
+          "cap": "create_auctions",
+          "purpose": "Create listings"
+        },
+        {
+          "cap": "edit_own_auctions",
+          "purpose": "Edit own drafts"
+        },
+        {
+          "cap": "submit_auctions",
+          "purpose": "Submit for review"
+        },
+        {
+          "cap": "host_live_auctions",
+          "purpose": "Host live rooms"
+        },
+        {
+          "cap": "view_own_auction_bids",
+          "purpose": "See own bid history"
+        },
+        {
+          "cap": "view_own_settlements",
+          "purpose": "See own settlements"
+        },
+        {
+          "cap": "moderate_auctions",
+          "purpose": "Approve, pause, close, cancel"
+        },
+        {
+          "cap": "manage_auction_holders",
+          "purpose": "Approve holder accounts"
+        },
+        {
+          "cap": "manage_auction_bids",
+          "purpose": "Audit and void bids"
+        },
+        {
+          "cap": "manage_auction_settings",
+          "purpose": "Settings and diagnostics"
+        },
+        {
+          "cap": "manage_auction_settlements",
+          "purpose": "Payout tracking"
+        }
+      ],
+      "related_faq": [
+        "faq-who-can-list",
+        "faq-who-can-bid",
+        "faq-self-bidding"
+      ],
+      "related_guides": [
+        "guide-approve-holder",
+        "guide-bidder-first-bid"
+      ]
+    },
+    {
+      "id": "guide-approve-holder",
+      "title": "Approve a third-party auction holder",
+      "audience": [
+        "admin"
+      ],
+      "difficulty": "beginner",
+      "estimated_minutes": 10,
+      "prerequisites": [
+        "Setup pages created",
+        "manage_auction_holders capability"
+      ],
+      "steps": [
+        {
+          "id": "1",
+          "title": "Applicant submits form",
+          "body": "The user opens Become an auction holder and submits [wcap_holder_apply]."
+        },
+        {
+          "id": "2",
+          "title": "Review in admin",
+          "body": "Open Auctions → Holders (or holder applications screen) and review the pending account."
+        },
+        {
+          "id": "3",
+          "title": "Approve, reject, or suspend",
+          "body": "Approve to allow creating/hosting. Reject or later suspend to block publishing and hosting."
+        },
+        {
+          "id": "4",
+          "title": "Confirm notification",
+          "body": "The holder should receive an approval or rejection notification when email is configured."
+        }
+      ],
+      "holder_statuses": [
+        "pending",
+        "approved",
+        "rejected",
+        "suspended"
+      ],
+      "related_faq": [
+        "faq-holder-apply",
+        "faq-who-can-list"
+      ],
+      "related_guides": [
+        "guide-holder-create-auction",
+        "guide-roles-capabilities"
+      ]
+    },
+    {
+      "id": "guide-timed-auction-admin",
+      "title": "Create and run a timed auction (administrator)",
+      "audience": [
+        "admin"
+      ],
+      "difficulty": "beginner",
+      "estimated_minutes": 25,
+      "prerequisites": [
+        "WooCommerce ready",
+        "Setup completed"
+      ],
+      "steps": [
+        {
+          "id": "1",
+          "title": "Create the auction",
+          "body": "Create a timed auction from admin or the submission UI. Link or create a WooCommerce product, set title, description, gallery, starting price, optional reserve, increment, start/end times, visibility, and terms."
+        },
+        {
+          "id": "2",
+          "title": "Moderate if needed",
+          "body": "If workflow requires review, approve the auction so it can schedule or go active."
+        },
+        {
+          "id": "3",
+          "title": "Publish schedule",
+          "body": "Ensure start and end times are correct in store timezone understanding; server stores UTC canonically."
+        },
+        {
+          "id": "4",
+          "title": "Monitor bidding",
+          "body": "Watch bid audit screens as needed. Soft close may extend the end time near close."
+        },
+        {
+          "id": "5",
+          "title": "Closing and award",
+          "body": "At end, the server determines winner, reserve result, award, and payment deadline. Confirm Action Scheduler jobs if close seems delayed."
+        },
+        {
+          "id": "6",
+          "title": "Payment and completion",
+          "body": "When the winner pays via WooCommerce, order events update auction, award, and settlement state."
+        }
+      ],
+      "states_overview": [
+        "draft",
+        "pending_review",
+        "rejected",
+        "scheduled",
+        "active",
+        "paused_admin",
+        "closing",
+        "ended",
+        "reserve_not_met",
+        "payment_pending",
+        "paid",
+        "completed",
+        "unsold",
+        "cancelled",
+        "payment_defaulted"
+      ],
+      "related_faq": [
+        "faq-timed-vs-live",
+        "faq-soft-close",
+        "faq-winner-payment"
+      ],
+      "related_guides": [
+        "guide-winner-checkout",
+        "guide-settlements-admin"
+      ],
+      "accepts_bids_in": [
+        "active"
+      ]
+    },
+    {
+      "id": "guide-live-auction-holder",
+      "title": "Host a live auction room",
+      "audience": [
+        "holder",
+        "admin"
+      ],
+      "difficulty": "intermediate",
+      "estimated_minutes": 30,
+      "prerequisites": [
+        "Approved holder (or admin)",
+        "host_live_auctions capability",
+        "Live page created"
+      ],
+      "steps": [
+        {
+          "id": "1",
+          "title": "Create a live auction",
+          "body": "Create a live-type auction with product details, starting price, increment, and visibility. Submit for review if required."
+        },
+        {
+          "id": "2",
+          "title": "Share the room URL",
+          "body": "Share the live room page URL (shortcode [wcap_live_room id=\"AUCTION_ID\"] or assigned live page with auction context)."
+        },
+        {
+          "id": "3",
+          "title": "Open the lobby",
+          "body": "From the host console ([wcap_live_host id=\"AUCTION_ID\"]), open the lobby so participants can join before bidding starts."
+        },
+        {
+          "id": "4",
+          "title": "Start the auction",
+          "body": "Start live bidding. Participants see current price, increment controls, and server-synced status."
+        },
+        {
+          "id": "5",
+          "title": "Control the room",
+          "body": "Pause/resume, adjust increment when permitted, mark going once / going twice, extend time, sell to current leader, mark unsold, or cancel with a reason."
+        },
+        {
+          "id": "6",
+          "title": "Settle the sale",
+          "body": "After sold/payment pending, the winner pays through WooCommerce like a timed auction award."
+        }
+      ],
+      "states_overview": [
+        "draft",
+        "pending_review",
+        "scheduled",
+        "lobby",
+        "live",
+        "paused",
+        "going_once",
+        "going_twice",
+        "closing",
+        "sold_payment_pending",
+        "payment_pending",
+        "paid",
+        "completed",
+        "unsold",
+        "cancelled",
+        "payment_defaulted"
+      ],
+      "host_actions": [
+        "open_lobby",
+        "start",
+        "pause",
+        "resume",
+        "change_increment",
+        "going_once",
+        "going_twice",
+        "extend",
+        "sell",
+        "unsold",
+        "cancel"
+      ],
+      "related_faq": [
+        "faq-timed-vs-live",
+        "faq-live-sync"
+      ],
+      "related_guides": [
+        "guide-winner-checkout",
+        "guide-holder-dashboard"
+      ],
+      "accepts_bids_in": [
+        "live",
+        "going_once",
+        "going_twice"
+      ]
+    },
+    {
+      "id": "guide-holder-create-auction",
+      "title": "Create an auction as a holder",
+      "audience": [
+        "holder"
+      ],
+      "difficulty": "beginner",
+      "estimated_minutes": 20,
+      "prerequisites": [
+        "Approved holder account",
+        "Submit page available"
+      ],
+      "steps": [
+        {
+          "id": "1",
+          "title": "Open submit or holder dashboard",
+          "body": "Use [wcap_submit_auction] or the holder dashboard create view."
+        },
+        {
+          "id": "2",
+          "title": "Fill listing details",
+          "body": "Add title, descriptions, images, condition, prices, schedule, fulfilment type, and terms acknowledgement."
+        },
+        {
+          "id": "3",
+          "title": "Save draft or submit",
+          "body": "Edit own drafts, then submit for review when ready."
+        },
+        {
+          "id": "4",
+          "title": "Wait for approval",
+          "body": "After approval, the auction schedules or becomes available according to type and start time."
+        },
+        {
+          "id": "5",
+          "title": "Track results",
+          "body": "Use listings, orders, and payouts views in the holder dashboard."
+        }
+      ],
+      "dashboard_views": [
+        "overview",
+        "listings",
+        "orders",
+        "payouts",
+        "create",
+        "address"
+      ],
+      "related_faq": [
+        "faq-holder-apply",
+        "faq-visibility"
+      ],
+      "related_guides": [
+        "guide-approve-holder",
+        "guide-live-auction-holder",
+        "guide-holder-dashboard"
+      ]
+    },
+    {
+      "id": "guide-holder-dashboard",
+      "title": "Use the auction holder dashboard",
+      "audience": [
+        "holder"
+      ],
+      "difficulty": "beginner",
+      "estimated_minutes": 15,
+      "prerequisites": [
+        "Approved holder"
+      ],
+      "steps": [
+        {
+          "id": "1",
+          "title": "Open the dashboard",
+          "body": "Visit the Auction holder dashboard page ([wcap_holder_dashboard])."
+        },
+        {
+          "id": "2",
+          "title": "Review metrics",
+          "body": "Check overview metrics for upcoming, live, sold, and unsettled items."
+        },
+        {
+          "id": "3",
+          "title": "Manage listings",
+          "body": "Use listings to find drafts, pending review, live, and completed auctions."
+        },
+        {
+          "id": "4",
+          "title": "Manage orders and payouts",
+          "body": "Open orders for WooCommerce-linked sales and payouts for settlement requests / status."
+        }
+      ],
+      "query_var": "wcap_view",
+      "related_faq": [
+        "faq-commission-payouts"
+      ],
+      "related_guides": [
+        "guide-holder-create-auction",
+        "guide-settlements-admin"
+      ]
+    },
+    {
+      "id": "guide-bidder-register-login",
+      "title": "Register or log in to bid",
+      "audience": [
+        "bidder",
+        "visitor"
+      ],
+      "difficulty": "beginner",
+      "estimated_minutes": 5,
+      "prerequisites": [
+        "Login page created"
+      ],
+      "steps": [
+        {
+          "id": "1",
+          "title": "Open the login page",
+          "body": "Go to the Log in page created by Setup ([wcap_login])."
+        },
+        {
+          "id": "2",
+          "title": "Register or sign in",
+          "body": "Create an account if registration is enabled, or sign in with existing credentials."
+        },
+        {
+          "id": "3",
+          "title": "Land on dashboard",
+          "body": "If login redirect is enabled, you are sent to the appropriate bidder or holder dashboard."
+        }
+      ],
+      "related_faq": [
+        "faq-login-page",
+        "faq-who-can-bid"
+      ],
+      "related_guides": [
+        "guide-bidder-first-bid",
+        "guide-bidder-dashboard"
+      ]
+    },
+    {
+      "id": "guide-bidder-first-bid",
+      "title": "Place your first bid",
+      "audience": [
+        "bidder"
+      ],
+      "difficulty": "beginner",
+      "estimated_minutes": 10,
+      "prerequisites": [
+        "Logged-in bidder account"
+      ],
+      "steps": [
+        {
+          "id": "1",
+          "title": "Browse auctions",
+          "body": "Open the Auctions archive ([wcap_auction_grid]) and choose a lot."
+        },
+        {
+          "id": "2",
+          "title": "Read terms and details",
+          "body": "Review description, condition, shipping/pickup, current price, next minimum bid, and countdown."
+        },
+        {
+          "id": "3",
+          "title": "Accept terms if required",
+          "body": "If require_terms is enabled, acknowledge auction terms before bidding."
+        },
+        {
+          "id": "4",
+          "title": "Submit a bid",
+          "body": "Use quick bid (next increment) or enter a custom amount, then confirm. Wait for server confirmation."
+        },
+        {
+          "id": "5",
+          "title": "Watch leading / outbid state",
+          "body": "Track status on the auction page, My bids, or bidder dashboard. You may receive outbid emails."
+        }
+      ],
+      "related_faq": [
+        "faq-how-bids-work",
+        "faq-soft-close",
+        "faq-self-bidding"
+      ],
+      "related_guides": [
+        "guide-bidder-dashboard",
+        "guide-winner-checkout"
+      ]
+    },
+    {
+      "id": "guide-bidder-dashboard",
+      "title": "Use the bidder dashboard",
+      "audience": [
+        "bidder"
+      ],
+      "difficulty": "beginner",
+      "estimated_minutes": 10,
+      "prerequisites": [
+        "Logged-in bidder"
+      ],
+      "steps": [
+        {
+          "id": "1",
+          "title": "Open bidder dashboard",
+          "body": "Visit [wcap_bidder_dashboard] or My bids / My wins pages."
+        },
+        {
+          "id": "2",
+          "title": "Track activity",
+          "body": "Review active bids, leading, outbid, watchlist, wins, and payment-required awards."
+        },
+        {
+          "id": "3",
+          "title": "Manage preferences",
+          "body": "Update notification preferences and account/address details where available."
+        }
+      ],
+      "dashboard_views": [
+        "overview",
+        "bids",
+        "watchlist",
+        "purchases",
+        "pickup",
+        "address"
+      ],
+      "related_faq": [
+        "faq-notifications",
+        "faq-winner-payment"
+      ],
+      "related_guides": [
+        "guide-bidder-first-bid",
+        "guide-winner-checkout"
+      ]
+    },
+    {
+      "id": "guide-winner-checkout",
+      "title": "Pay for a won auction",
+      "audience": [
+        "bidder"
+      ],
+      "difficulty": "beginner",
+      "estimated_minutes": 15,
+      "prerequisites": [
+        "Winning award created",
+        "Payment gateway configured"
+      ],
+      "steps": [
+        {
+          "id": "1",
+          "title": "Open payment action",
+          "body": "Use the winner notification, My wins, or Pay for won auction page ([wcap_pay_award])."
+        },
+        {
+          "id": "2",
+          "title": "Confirm you are the winner",
+          "body": "Only the awarded user can start checkout. Ownership is revalidated on every request."
+        },
+        {
+          "id": "3",
+          "title": "Complete WooCommerce checkout",
+          "body": "Quantity and price are locked to the award. Choose shipping/pickup as offered and pay with a configured gateway."
+        },
+        {
+          "id": "4",
+          "title": "Keep the deadline",
+          "body": "Pay before the payment deadline. After expiry the award may default."
+        }
+      ],
+      "related_faq": [
+        "faq-winner-payment",
+        "faq-payment-default",
+        "faq-cards"
+      ],
+      "related_guides": [
+        "guide-bidder-dashboard",
+        "guide-settlements-admin"
+      ]
+    },
+    {
+      "id": "guide-settlements-admin",
+      "title": "Manage commissions and payouts",
+      "audience": [
+        "admin"
+      ],
+      "difficulty": "intermediate",
+      "estimated_minutes": 20,
+      "prerequisites": [
+        "manage_auction_settlements capability",
+        "At least one paid auction order"
+      ],
+      "steps": [
+        {
+          "id": "1",
+          "title": "Open settlements",
+          "body": "Go to Auctions → Settlements."
+        },
+        {
+          "id": "2",
+          "title": "Review ledger fields",
+          "body": "Check gross amount, commission, fees, refunds, net amount, and payout status for each settlement."
+        },
+        {
+          "id": "3",
+          "title": "Handle holder payout requests",
+          "body": "Review pending payout requests and any uploaded transaction proof. Mark statuses such as approved, paid, reversed, or disputed according to your process."
+        },
+        {
+          "id": "4",
+          "title": "Keep refunds in sync",
+          "body": "When WooCommerce refunds or cancels orders, confirm settlement rows update. Do not pay holders for reversed amounts."
+        }
+      ],
+      "payout_statuses": [
+        "pending",
+        "approved",
+        "paid",
+        "reversed",
+        "disputed"
+      ],
+      "related_faq": [
+        "faq-commission-payouts",
+        "faq-currency"
+      ],
+      "related_guides": [
+        "guide-admin-settings",
+        "guide-winner-checkout"
+      ],
+      "payout_request_statuses": [
+        "pending",
+        "approved",
+        "paid",
+        "rejected",
+        "cancelled"
+      ],
+      "order_managed_by": [
+        "admin",
+        "seller",
+        "both"
+      ]
+    },
+    {
+      "id": "guide-shortcodes",
+      "title": "Shortcode reference and usage",
+      "audience": [
+        "admin",
+        "developer"
+      ],
+      "difficulty": "beginner",
+      "estimated_minutes": 15,
+      "prerequisites": [],
+      "steps": [
+        {
+          "id": "1",
+          "title": "Add a shortcode to a page",
+          "body": "Edit any WordPress page and paste a shortcode into the content, or use an Elementor shortcode/widget equivalent."
+        },
+        {
+          "id": "2",
+          "title": "Pass attributes where supported",
+          "body": "Use documented attributes such as id, type, state, and per_page."
+        },
+        {
+          "id": "3",
+          "title": "Combine modular pieces",
+          "body": "On custom layouts you can combine [wcap_countdown], [wcap_bid_panel], and [wcap_bid_history] with a known auction id."
+        }
+      ],
+      "shortcodes": [
+        {
+          "tag": "wcap_auction_grid",
+          "purpose": "Auction catalog grid/list",
+          "attributes": {
+            "type": "timed|live|empty (optional; also accepts ?wcap_type=)",
+            "state": "comma-separated states (default active,scheduled,live,lobby)",
+            "per_page": "integer (default 12)"
+          },
+          "example": "[wcap_auction_grid type=\"timed\" state=\"active,scheduled\" per_page=\"12\"]"
+        },
+        {
+          "tag": "wcap_single_auction",
+          "purpose": "Single auction experience",
+          "attributes": {
+            "id": "auction id; falls back to current CPT or ?auction_id="
+          },
+          "example": "[wcap_single_auction id=\"123\"]"
+        },
+        {
+          "tag": "wcap_live_room",
+          "purpose": "Live participant room",
+          "attributes": {
+            "id": "auction id"
+          },
+          "example": "[wcap_live_room id=\"123\"]"
+        },
+        {
+          "tag": "wcap_live_host",
+          "purpose": "Live host console",
+          "attributes": {
+            "id": "auction id"
+          },
+          "example": "[wcap_live_host id=\"123\"]"
+        },
+        {
+          "tag": "wcap_submit_auction",
+          "purpose": "Create/submit listing form",
+          "attributes": {},
+          "example": "[wcap_submit_auction]"
+        },
+        {
+          "tag": "wcap_holder_dashboard",
+          "purpose": "Holder dashboard shell",
+          "attributes": {},
+          "example": "[wcap_holder_dashboard]"
+        },
+        {
+          "tag": "wcap_bidder_dashboard",
+          "purpose": "Bidder dashboard shell",
+          "attributes": {},
+          "example": "[wcap_bidder_dashboard]"
+        },
+        {
+          "tag": "wcap_my_bids",
+          "purpose": "Current user bids",
+          "attributes": {},
+          "example": "[wcap_my_bids]"
+        },
+        {
+          "tag": "wcap_my_wins",
+          "purpose": "Current user wins",
+          "attributes": {},
+          "example": "[wcap_my_wins]"
+        },
+        {
+          "tag": "wcap_pay_award",
+          "purpose": "Winner payment entry",
+          "attributes": {},
+          "example": "[wcap_pay_award]"
+        },
+        {
+          "tag": "wcap_holder_apply",
+          "purpose": "Holder application form",
+          "attributes": {},
+          "example": "[wcap_holder_apply]"
+        },
+        {
+          "tag": "wcap_login",
+          "purpose": "Login / register / lost / reset",
+          "attributes": {
+            "view": "login|register|lost|reset (optional)"
+          },
+          "example": "[wcap_login view=\"login\"]"
+        },
+        {
+          "tag": "wcap_countdown",
+          "purpose": "Server-synced countdown",
+          "attributes": {
+            "id": "auction id"
+          },
+          "example": "[wcap_countdown id=\"123\"]"
+        },
+        {
+          "tag": "wcap_bid_panel",
+          "purpose": "Bid form panel (renders the single-auction bidding UI for an id)",
+          "attributes": {
+            "id": "auction id"
+          },
+          "example": "[wcap_bid_panel id=\"123\"]",
+          "notes": "Alias-style mount around the bidding experience for modular layouts."
+        },
+        {
+          "tag": "wcap_bid_history",
+          "purpose": "Bid history list",
+          "attributes": {
+            "id": "auction id"
+          },
+          "example": "[wcap_bid_history id=\"123\"]"
+        },
+        {
+          "tag": "wcap_register",
+          "purpose": "Registration view helper (same auth UI as login register view)",
+          "attributes": {},
+          "example": "[wcap_register]"
+        }
+      ],
+      "related_faq": [
+        "faq-shortcodes-list",
+        "faq-elementor-required"
+      ],
+      "related_guides": [
+        "guide-setup-pages",
+        "guide-elementor"
+      ]
+    },
+    {
+      "id": "guide-elementor",
+      "title": "Build auction pages with Elementor",
+      "audience": [
+        "admin"
+      ],
+      "difficulty": "intermediate",
+      "estimated_minutes": 25,
+      "prerequisites": [
+        "Elementor installed (optional)",
+        "Setup pages exist"
+      ],
+      "steps": [
+        {
+          "id": "1",
+          "title": "Confirm Elementor is optional",
+          "body": "If Elementor is inactive, keep using shortcodes. Do not require Elementor for core auctions."
+        },
+        {
+          "id": "2",
+          "title": "Edit a Setup page in Elementor",
+          "body": "Open any assigned auction page and edit with Elementor."
+        },
+        {
+          "id": "3",
+          "title": "Insert Logicanvas Auctions for WooCommerce widgets",
+          "body": "Use modular widgets: Auction Grid, Search/Filters, Single Auction, Gallery, Details, Current Price, Countdown, Bid Panel, Bid History, Live Room, Host Console, dashboards, submission, status, share, login."
+        },
+        {
+          "id": "4",
+          "title": "Use dynamic tags carefully",
+          "body": "When available, dynamic tags can output auction ID, prices, end time, countdown, state, type, bid count, reserve-met, holder name, and condition. Never expose privileged data in editor previews."
+        },
+        {
+          "id": "5",
+          "title": "Style responsively",
+          "body": "Configure typography, colors, spacing, and empty states per widget. Keep bidding controls keyboard accessible."
+        }
+      ],
+      "widgets": [
+        "Auction Grid",
+        "Auction Search and Filters",
+        "Single Auction",
+        "Auction Gallery",
+        "Auction Details",
+        "Current Price",
+        "Countdown",
+        "Bid Panel",
+        "Bid History",
+        "Live Auction Room",
+        "Live Host Console",
+        "Auction Holder Dashboard",
+        "Bidder Dashboard",
+        "Auction Submission Form",
+        "My Auctions",
+        "My Bids",
+        "My Won Auctions",
+        "Auction Status Badge",
+        "Auction Share Button",
+        "Login"
+      ],
+      "dynamic_tags": [
+        "Auction ID",
+        "Current price",
+        "Starting price",
+        "End time",
+        "Countdown value",
+        "Auction state",
+        "Auction type",
+        "Bid count",
+        "Reserve-met status",
+        "Holder name",
+        "Product condition"
+      ],
+      "related_faq": [
+        "faq-elementor-required"
+      ],
+      "related_guides": [
+        "guide-setup-pages",
+        "guide-shortcodes"
+      ]
+    },
+    {
+      "id": "guide-visibility-invites",
+      "title": "Use public, unlisted, and invite-only auctions",
+      "audience": [
+        "holder",
+        "admin"
+      ],
+      "difficulty": "intermediate",
+      "estimated_minutes": 15,
+      "prerequisites": [
+        "Ability to create auctions"
+      ],
+      "steps": [
+        {
+          "id": "1",
+          "title": "Choose visibility",
+          "body": "Select public for catalog listing, unlisted for share-link access without public listing, or private/invite-only for invited users."
+        },
+        {
+          "id": "2",
+          "title": "Distribute access safely",
+          "body": "Share unlisted links carefully. For invites, generate tokens that can expire, revoke, or bind to email/user."
+        },
+        {
+          "id": "3",
+          "title": "Require login to bid",
+          "body": "Viewing may be public, but bidding always requires an authenticated eligible bidder."
+        }
+      ],
+      "related_faq": [
+        "faq-visibility",
+        "faq-who-can-bid"
+      ],
+      "related_guides": [
+        "guide-holder-create-auction"
+      ]
+    },
+    {
+      "id": "guide-troubleshooting",
+      "title": "Troubleshooting common issues",
+      "audience": [
+        "admin"
+      ],
+      "difficulty": "intermediate",
+      "estimated_minutes": 20,
+      "prerequisites": [],
+      "steps": [
+        {
+          "id": "1",
+          "title": "WooCommerce missing notice",
+          "body": "Activate WooCommerce. Logicanvas Auctions for WooCommerce cannot process winners without it."
+        },
+        {
+          "id": "2",
+          "title": "Elementor widgets missing",
+          "body": "Expected when Elementor is inactive. Use shortcodes instead."
+        },
+        {
+          "id": "3",
+          "title": "Auction did not close",
+          "body": "Check Action Scheduler. Open the auction page after end time to trigger idempotent close failsafe. Use WP-CLI: wp logicanvas-auctions overdue or wp logicanvas-auctions close <id>."
+        },
+        {
+          "id": "4",
+          "title": "Bids rejected",
+          "body": "Confirm login, eligibility, not self-bidding, correct increment, auction accepting bids, and rate limits not exceeded."
+        },
+        {
+          "id": "5",
+          "title": "Winner cannot pay",
+          "body": "Confirm award ownership, deadline not expired, gateway configured, and coupons/mixed-cart settings not blocking unexpectedly."
+        },
+        {
+          "id": "6",
+          "title": "Live room stale",
+          "body": "Confirm realtime_mode polling, browser tab visibility, REST nonce/session valid, and clients recover from last sequence."
+        },
+        {
+          "id": "7",
+          "title": "Run diagnostics",
+          "body": "Use Auctions → Diagnostics or wp logicanvas-auctions diagnostics / schema."
+        }
+      ],
+      "related_faq": [
+        "faq-cron",
+        "faq-conflict-auction-platform",
+        "faq-elementor-required"
+      ],
+      "related_guides": [
+        "guide-install-activate",
+        "guide-winner-checkout"
+      ]
+    },
+    {
+      "id": "guide-privacy-security",
+      "title": "Privacy and security essentials",
+      "audience": [
+        "admin",
+        "developer"
+      ],
+      "difficulty": "intermediate",
+      "estimated_minutes": 15,
+      "prerequisites": [],
+      "steps": [
+        {
+          "id": "1",
+          "title": "Keep payments in WooCommerce",
+          "body": "Never collect cards outside WooCommerce gateways."
+        },
+        {
+          "id": "2",
+          "title": "Use Tools → Export/Erase personal data",
+          "body": "Plugin hooks support WordPress privacy tools; financial rows may be anonymized."
+        },
+        {
+          "id": "3",
+          "title": "Review public bid display",
+          "body": "Public names are aliased/filtered. Do not expose emails or IPs in public templates."
+        },
+        {
+          "id": "4",
+          "title": "Control uninstall data",
+          "body": "Leave remove_data_on_uninstall false unless you intentionally want tables deleted on uninstall."
+        }
+      ],
+      "security_highlights": [
+        "Capability + ownership checks on REST and forms",
+        "Nonces for CSRF; capabilities for authorization",
+        "Prepared SQL; hashed invite tokens",
+        "Rate limits on bidding, auth, applications, uploads",
+        "No eval / unsafe unserialize / raw card storage"
+      ],
+      "related_faq": [
+        "faq-privacy",
+        "faq-cards",
+        "faq-uninstall"
+      ],
+      "related_guides": [
+        "guide-admin-settings"
+      ]
+    },
+    {
+      "id": "guide-developer-rest",
+      "title": "REST API and realtime integration",
+      "audience": [
+        "developer"
+      ],
+      "difficulty": "advanced",
+      "estimated_minutes": 30,
+      "prerequisites": [
+        "WordPress REST familiarity",
+        "Authenticated session for writes"
+      ],
+      "steps": [
+        {
+          "id": "1",
+          "title": "Use the namespace",
+          "body": "All routes live under /wp-json/logicanvas-auctions/v1/."
+        },
+        {
+          "id": "2",
+          "title": "Authenticate writes",
+          "body": "Send cookie auth plus a valid REST nonce for POST routes."
+        },
+        {
+          "id": "3",
+          "title": "Poll events by sequence",
+          "body": "Live clients call GET /auctions/{id}/events incrementally. Recover from last confirmed sequence after reconnect."
+        },
+        {
+          "id": "4",
+          "title": "Never trust push alone",
+          "body": "If a push transport is configured, treat it as a wake signal only. Authoritative state always comes from WordPress."
+        }
+      ],
+      "routes": [
+        {
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "path": "/auctions"
+        },
+        {
+          "methods": [
+            "GET"
+          ],
+          "path": "/auctions/{id}"
+        },
+        {
+          "methods": [
+            "GET"
+          ],
+          "path": "/auctions/{id}/state"
+        },
+        {
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "path": "/auctions/{id}/bids"
+        },
+        {
+          "methods": [
+            "GET"
+          ],
+          "path": "/auctions/{id}/events"
+        },
+        {
+          "methods": [
+            "POST"
+          ],
+          "path": "/auctions/{id}/watch"
+        },
+        {
+          "methods": [
+            "POST"
+          ],
+          "path": "/auctions/{id}/submit"
+        },
+        {
+          "methods": [
+            "POST"
+          ],
+          "path": "/auctions/{id}/approve"
+        },
+        {
+          "methods": [
+            "POST"
+          ],
+          "path": "/media"
+        },
+        {
+          "methods": [
+            "POST"
+          ],
+          "path": "/live/{id}/host"
+        },
+        {
+          "methods": [
+            "POST"
+          ],
+          "path": "/live/{id}/join"
+        },
+        {
+          "methods": [
+            "POST"
+          ],
+          "path": "/awards/{id}/checkout"
+        },
+        {
+          "methods": [
+            "GET"
+          ],
+          "path": "/products"
+        },
+        {
+          "methods": [
+            "GET"
+          ],
+          "path": "/products/{id}"
+        },
+        {
+          "methods": [
+            "POST"
+          ],
+          "path": "/holder/apply"
+        },
+        {
+          "methods": [
+            "GET"
+          ],
+          "path": "/me/dashboard"
+        },
+        {
+          "methods": [
+            "POST"
+          ],
+          "path": "/auctions/{id}/accept-bid"
+        },
+        {
+          "methods": [
+            "POST"
+          ],
+          "path": "/orders/{id}"
+        },
+        {
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "path": "/payouts"
+        },
+        {
+          "methods": [
+            "POST"
+          ],
+          "path": "/payouts/method"
+        },
+        {
+          "methods": [
+            "POST"
+          ],
+          "path": "/payouts/{id}/cancel"
+        }
+      ],
+      "hooks": {
+        "actions": [
+          "wcap_auction_created",
+          "wcap_auction_approved",
+          "wcap_auction_started",
+          "wcap_before_bid_validation",
+          "wcap_bid_accepted",
+          "wcap_bidder_outbid",
+          "wcap_auction_extended",
+          "wcap_auction_closed",
+          "wcap_award_created",
+          "wcap_winner_checkout_initialized",
+          "wcap_order_linked",
+          "wcap_payment_completed",
+          "wcap_payment_failed",
+          "wcap_payment_deadline_expired",
+          "wcap_settlement_calculated",
+          "wcap_payout_status_changed",
+          "wcap_notification_dispatch",
+          "wcap_realtime_notify",
+          "wcap_holder_approved",
+          "wcap_holder_rejected",
+          "wcap_logged"
+        ],
+        "filters": [
+          "wcap_bid_increment",
+          "wcap_commission_amount",
+          "wcap_public_bidder_display_name",
+          "wcap_role_restricted_access",
+          "wcap_enqueue_frontend_assets",
+          "wcap_user_can_access_wp_admin",
+          "wcap_dashboard_url_for_user",
+          "wcap_login_redirect",
+          "wcap_allow_frontend_registration",
+          "wcap_max_image_bytes",
+          "wcap_image_uploads_per_hour"
+        ]
+      },
+      "wp_cli": [
+        "wp logicanvas-auctions list [--state=<state>]",
+        "wp logicanvas-auctions close <id>",
+        "wp logicanvas-auctions overdue",
+        "wp logicanvas-auctions rebuild <id>",
+        "wp logicanvas-auctions schema",
+        "wp logicanvas-auctions diagnostics",
+        "wp logicanvas-auctions reschedule <id>",
+        "wp logicanvas-auctions migrate"
+      ],
+      "related_faq": [
+        "faq-rest",
+        "faq-wp-cli",
+        "faq-live-sync"
+      ],
+      "related_guides": [
+        "guide-troubleshooting",
+        "guide-privacy-security"
+      ]
+    },
+    {
+      "id": "guide-theme-templates",
+      "title": "Override templates in a theme",
+      "audience": [
+        "developer"
+      ],
+      "difficulty": "intermediate",
+      "estimated_minutes": 15,
+      "prerequisites": [
+        "Child theme recommended"
+      ],
+      "steps": [
+        {
+          "id": "1",
+          "title": "Locate plugin templates",
+          "body": "Copy files from wp-content/plugins/logicanvas-auctions/templates/."
+        },
+        {
+          "id": "2",
+          "title": "Place overrides",
+          "body": "Put them in your-theme/logicanvas-auctions/ with the same relative path."
+        },
+        {
+          "id": "3",
+          "title": "Keep escaping and i18n",
+          "body": "Preserve escaping, text domain logicanvas-auctions, and do not move business rules into templates."
+        }
+      ],
+      "related_faq": [
+        "faq-theme-override"
+      ],
+      "related_guides": [
+        "guide-shortcodes",
+        "guide-elementor"
+      ]
+    }
+  ],
+  "glossaries": [
+    {
+      "term": "Auction holder",
+      "definition": "Approved seller who can create and host auctions."
+    },
+    {
+      "term": "Bidder",
+      "definition": "Registered user who can place bids on eligible auctions."
+    },
+    {
+      "term": "Award",
+      "definition": "Immutable record linking winner, final amount, currency, and payment deadline after a successful close."
+    },
+    {
+      "term": "Settlement",
+      "definition": "Ledger row for gross sale, commission, fees, refunds, net amount, and payout status."
+    },
+    {
+      "term": "Soft close",
+      "definition": "Anti-sniping extension of a timed auction end time when late bids arrive."
+    },
+    {
+      "term": "Sequence",
+      "definition": "Monotonic auction event/version number used for realtime polling and cache invalidation."
+    },
+    {
+      "term": "Idempotency key",
+      "definition": "Client-generated key that makes repeated bid requests return the original result."
+    }
+  ],
+  "navigation": {
+    "faq_categories": [
+      {
+        "id": "general",
+        "label": "General"
+      },
+      {
+        "id": "requirements",
+        "label": "Requirements"
+      },
+      {
+        "id": "setup",
+        "label": "Setup"
+      },
+      {
+        "id": "auctions",
+        "label": "Auctions"
+      },
+      {
+        "id": "bidding",
+        "label": "Bidding"
+      },
+      {
+        "id": "live",
+        "label": "Live rooms"
+      },
+      {
+        "id": "holders",
+        "label": "Holders"
+      },
+      {
+        "id": "payments",
+        "label": "Payments"
+      },
+      {
+        "id": "settlements",
+        "label": "Settlements"
+      },
+      {
+        "id": "accounts",
+        "label": "Accounts"
+      },
+      {
+        "id": "notifications",
+        "label": "Notifications"
+      },
+      {
+        "id": "privacy",
+        "label": "Privacy"
+      },
+      {
+        "id": "data",
+        "label": "Data"
+      },
+      {
+        "id": "admin",
+        "label": "Administration"
+      },
+      {
+        "id": "customization",
+        "label": "Customization"
+      },
+      {
+        "id": "troubleshooting",
+        "label": "Troubleshooting"
+      },
+      {
+        "id": "developer",
+        "label": "Developers"
+      }
+    ],
+    "suggested_learning_paths": [
+      {
+        "id": "path-admin-launch",
+        "title": "Launch the marketplace",
+        "guide_ids": [
+          "guide-install-activate",
+          "guide-setup-pages",
+          "guide-admin-settings",
+          "guide-roles-capabilities",
+          "guide-approve-holder",
+          "guide-timed-auction-admin",
+          "guide-settlements-admin"
+        ]
+      },
+      {
+        "id": "path-holder",
+        "title": "Become a seller and host",
+        "guide_ids": [
+          "guide-holder-create-auction",
+          "guide-holder-dashboard",
+          "guide-live-auction-holder",
+          "guide-visibility-invites"
+        ]
+      },
+      {
+        "id": "path-bidder",
+        "title": "Bid and pay",
+        "guide_ids": [
+          "guide-bidder-register-login",
+          "guide-bidder-first-bid",
+          "guide-bidder-dashboard",
+          "guide-winner-checkout"
+        ]
+      },
+      {
+        "id": "path-builder",
+        "title": "Build pages and integrations",
+        "guide_ids": [
+          "guide-shortcodes",
+          "guide-elementor",
+          "guide-theme-templates",
+          "guide-developer-rest",
+          "guide-troubleshooting",
+          "guide-privacy-security"
+        ]
+      }
+    ]
+  },
+  "visibility_values": [
+    "public",
+    "unlisted",
+    "private",
+    "role_restricted"
+  ]
+}

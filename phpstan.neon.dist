@@ -1,0 +1,17 @@
+parameters:
+  level: 6
+  paths:
+    - src/Domain/Money
+    - src/Domain/Auction/TimedStateMachine.php
+    - src/Domain/Auction/LiveStateMachine.php
+    - src/Domain/Auction/AuctionState.php
+    - src/Domain/Auction/AuctionType.php
+    - src/Domain/Auction/Visibility.php
+    - src/Domain/Auction/InvalidTransitionException.php
+    - src/Domain/Auction/Auction.php
+    - src/Domain/Bidding/IncrementCalculator.php
+    - src/Domain/Bidding/ProxyBidding.php
+    - src/Domain/Bidding/Bid.php
+    - src/Domain/Bidding/BidRejectedException.php
+  bootstrapFiles:
+    - tests/bootstrap.php
