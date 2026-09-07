@@ -130,8 +130,8 @@ final class SeoCompat {
 		if ( ! is_string( $expected ) || '' === $expected ) {
 			return;
 		}
-		$request_uri  = isset( $_SERVER['REQUEST_URI'] ) ? (string) wp_unslash( $_SERVER['REQUEST_URI'] ) : '';
-		$current_path = wp_parse_url( $request_uri, PHP_URL_PATH );
+		$request_uri   = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( (string) $_SERVER['REQUEST_URI'] ) ) : '';
+		$current_path  = wp_parse_url( $request_uri, PHP_URL_PATH );
 		$expected_path = wp_parse_url( $expected, PHP_URL_PATH );
 		if ( ! is_string( $expected_path ) || ! is_string( $current_path ) ) {
 			return;

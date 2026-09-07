@@ -20,7 +20,12 @@ final class ListingContent {
 			return '';
 		}
 
-		return (string) apply_filters( 'the_content', $content );
+		/**
+		 * Filters formatted auction listing body HTML.
+		 *
+		 * @param string $html Formatted listing HTML.
+		 */
+		return (string) apply_filters( 'wcap_listing_content', self::pipeline( $content ) );
 	}
 
 	/**
@@ -33,9 +38,38 @@ final class ListingContent {
 		}
 
 		if ( ! str_contains( $text, '<' ) ) {
-			return wpautop( esc_html( $text ) );
+			$html = wpautop( esc_html( $text ) );
+		} else {
+			$html = self::pipeline( $text );
 		}
 
-		return (string) apply_filters( 'the_content', $text );
+		/**
+		 * Filters formatted auction listing excerpt HTML.
+		 *
+		 * @param string $html Formatted excerpt HTML.
+		 */
+		return (string) apply_filters( 'wcap_listing_excerpt', $html );
+	}
+
+	/**
+	 * Core content formatting without invoking the unprefixed `the_content` hook.
+	 */
+	private static function pipeline( string $content ): string {
+		$content = wptexturize( $content );
+		$content = convert_smilies( $content );
+		$content = wpautop( $content );
+		$content = shortcode_unautop( $content );
+
+		if ( function_exists( 'wp_filter_content_tags' ) ) {
+			$content = wp_filter_content_tags( $content );
+		}
+
+		$content = do_shortcode( $content );
+
+		if ( function_exists( 'wp_replace_insecure_home_url' ) ) {
+			$content = wp_replace_insecure_home_url( $content );
+		}
+
+		return $content;
 	}
 }

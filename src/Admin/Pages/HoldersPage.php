@@ -22,15 +22,20 @@ final class HoldersPage {
 		}
 
 		global $wpdb;
-		$table = Config::table( Config::TABLE_HOLDERS );
-		$rows  = QueryCache::remember(
-			QueryCache::key( 'admin_holders' ),
-			45,
-			static function () use ( $wpdb, $table ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM %i ORDER BY id DESC LIMIT 100', $table ), ARRAY_A );
-			}
-		);
+		$table     = Config::table( Config::TABLE_HOLDERS );
+		$cache_key = QueryCache::key( 'admin_holders' );
+		$rows      = wp_cache_get( $cache_key, QueryCache::GROUP );
+
+		if ( ! is_array( $rows ) ) {
+			// Custom plugin table — not available via WP_Query / get_posts.
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$rows = $wpdb->get_results(
+				$wpdb->prepare( 'SELECT * FROM %i ORDER BY id DESC LIMIT 100', $table ),
+				ARRAY_A
+			);
+			$rows = is_array( $rows ) ? $rows : array();
+			wp_cache_set( $cache_key, $rows, QueryCache::GROUP, 45 );
+		}
 
 		Screen::open(
 			__( 'Auction holders', 'logicanvas-auctions' ),

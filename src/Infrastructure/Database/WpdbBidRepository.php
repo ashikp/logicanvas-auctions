@@ -2,6 +2,12 @@
 /**
  * wpdb bid repository.
  *
+ * Custom InnoDB bids table — WP_Query / get_posts cannot serve these reads/writes.
+ * Object caching is handled via QueryCache around read methods; writes bust the group.
+ *
+ * phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery
+ * phpcs:disable WordPress.DB.DirectDatabaseQuery.NoCaching
+ *
  * @package LogicanvasAuctions
  */
 
@@ -28,17 +34,17 @@ final class WpdbBidRepository implements BidRepositoryInterface {
 		$wpdb->insert(
 			$this->table(),
 			array(
-				'auction_id'       => (int) $data['auction_id'],
-				'bidder_id'        => (int) $data['bidder_id'],
-				'amount'           => (string) $data['amount'],
-				'currency'         => (string) $data['currency'],
-				'type'             => (string) ( $data['type'] ?? Bid::TYPE_REGULAR ),
-				'max_amount'       => $data['max_amount'] ?? null,
-				'status'           => (string) ( $data['status'] ?? Bid::STATUS_ACCEPTED ),
-				'idempotency_key'  => (string) $data['idempotency_key'],
-				'ip_hash'          => $data['ip_hash'] ?? null,
-				'user_agent_hash'  => $data['user_agent_hash'] ?? null,
-				'created_at_utc'   => (string) $data['created_at_utc'],
+				'auction_id'      => (int) $data['auction_id'],
+				'bidder_id'       => (int) $data['bidder_id'],
+				'amount'          => (string) $data['amount'],
+				'currency'        => (string) $data['currency'],
+				'type'            => (string) ( $data['type'] ?? Bid::TYPE_REGULAR ),
+				'max_amount'      => $data['max_amount'] ?? null,
+				'status'          => (string) ( $data['status'] ?? Bid::STATUS_ACCEPTED ),
+				'idempotency_key' => (string) $data['idempotency_key'],
+				'ip_hash'         => $data['ip_hash'] ?? null,
+				'user_agent_hash' => $data['user_agent_hash'] ?? null,
+				'created_at_utc'  => (string) $data['created_at_utc'],
 			)
 		);
 
@@ -51,12 +57,10 @@ final class WpdbBidRepository implements BidRepositoryInterface {
 		global $wpdb;
 
 		$table = $this->table();
-		$key   = QueryCache::key( 'bid', $bid_id );
 		$row   = QueryCache::remember(
-			$key,
+			QueryCache::key( 'bid', $bid_id ),
 			60,
 			static function () use ( $wpdb, $table, $bid_id ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
 				return $wpdb->get_row(
 					$wpdb->prepare( 'SELECT * FROM %i WHERE id = %d', $table, $bid_id ),
 					ARRAY_A
@@ -70,13 +74,11 @@ final class WpdbBidRepository implements BidRepositoryInterface {
 	public function find_by_idempotency( int $auction_id, string $key ): ?Bid {
 		global $wpdb;
 
-		$table    = $this->table();
-		$cache_key = QueryCache::key( 'bid_idem', $auction_id, $key );
-		$row       = QueryCache::remember(
-			$cache_key,
+		$table = $this->table();
+		$row   = QueryCache::remember(
+			QueryCache::key( 'bid_idem', $auction_id, $key ),
 			30,
 			static function () use ( $wpdb, $table, $auction_id, $key ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
 				return $wpdb->get_row(
 					$wpdb->prepare(
 						'SELECT * FROM %i WHERE auction_id = %d AND idempotency_key = %s',
@@ -98,13 +100,11 @@ final class WpdbBidRepository implements BidRepositoryInterface {
 	public function for_auction( int $auction_id, int $limit = 50, int $offset = 0, bool $accepted_only = true ): array {
 		global $wpdb;
 
-		$table     = $this->table();
-		$cache_key = QueryCache::key( 'bids_list', $auction_id, $limit, $offset, $accepted_only ? 1 : 0 );
-		$rows      = QueryCache::remember(
-			$cache_key,
+		$table = $this->table();
+		$rows  = QueryCache::remember(
+			QueryCache::key( 'bids_list', $auction_id, $limit, $offset, $accepted_only ? 1 : 0 ),
 			30,
 			static function () use ( $wpdb, $table, $auction_id, $limit, $offset, $accepted_only ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
 				if ( $accepted_only ) {
 					return $wpdb->get_results(
 						$wpdb->prepare(
@@ -143,12 +143,10 @@ final class WpdbBidRepository implements BidRepositoryInterface {
 		global $wpdb;
 
 		$table = $this->table();
-		$key   = QueryCache::key( 'bid_highest', $auction_id );
 		$row   = QueryCache::remember(
-			$key,
+			QueryCache::key( 'bid_highest', $auction_id ),
 			30,
 			static function () use ( $wpdb, $table, $auction_id ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
 				return $wpdb->get_row(
 					$wpdb->prepare(
 						'SELECT * FROM %i WHERE auction_id = %d AND status = %s ORDER BY amount DESC, id ASC LIMIT 1',
@@ -171,12 +169,10 @@ final class WpdbBidRepository implements BidRepositoryInterface {
 		global $wpdb;
 
 		$table = $this->table();
-		$key   = QueryCache::key( 'bids_accepted', $auction_id );
 		$rows  = QueryCache::remember(
-			$key,
+			QueryCache::key( 'bids_accepted', $auction_id ),
 			30,
 			static function () use ( $wpdb, $table, $auction_id ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
 				return $wpdb->get_results(
 					$wpdb->prepare(
 						'SELECT * FROM %i WHERE auction_id = %d AND status = %s ORDER BY id ASC',
@@ -219,13 +215,11 @@ final class WpdbBidRepository implements BidRepositoryInterface {
 		global $wpdb;
 
 		$table = $this->table();
-		$key   = QueryCache::key( 'bid_count', $auction_id, $accepted_only ? 1 : 0 );
 
 		return (int) QueryCache::remember(
-			$key,
+			QueryCache::key( 'bid_count', $auction_id, $accepted_only ? 1 : 0 ),
 			30,
 			static function () use ( $wpdb, $table, $auction_id, $accepted_only ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
 				if ( $accepted_only ) {
 					return $wpdb->get_var(
 						$wpdb->prepare(
@@ -252,12 +246,10 @@ final class WpdbBidRepository implements BidRepositoryInterface {
 		global $wpdb;
 
 		$table = $this->table();
-		$key   = QueryCache::key( 'bid_proxy_max', $auction_id, $bidder_id );
 		$val   = QueryCache::remember(
-			$key,
+			QueryCache::key( 'bid_proxy_max', $auction_id, $bidder_id ),
 			30,
 			static function () use ( $wpdb, $table, $auction_id, $bidder_id ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
 				return $wpdb->get_var(
 					$wpdb->prepare(
 						'SELECT COALESCE(max_amount, amount) FROM %i WHERE auction_id = %d AND bidder_id = %d AND status = %s ORDER BY id DESC LIMIT 1',
@@ -273,3 +265,6 @@ final class WpdbBidRepository implements BidRepositoryInterface {
 		return $val ? (string) $val : null;
 	}
 }
+
+// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery
+// phpcs:enable WordPress.DB.DirectDatabaseQuery.NoCaching

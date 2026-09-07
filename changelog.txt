@@ -15,7 +15,7 @@ Release date: 2026-09-08
 * Classic Editor for auction CPT in wp-admin; frontend create keeps textareas; dedicated seller edit page uses Classic Editor like admin.
 * Frontend edit listing layout fixed (no lead-form grid crush); wp-admin auction editor restored with product, gallery, and full settings meta boxes.
 * Icon + text admin actions with shared reason/confirm popup (Auctions, Holders, Bids).
-* Admin review/rating popup every 2 weeks (snooze or mark already reviewed).
+* Admin review/rating popup every 2 weeks (snooze or mark already reviewed); review link uses the standard reviews page (no 5-star filter).
 * Auction Categories admin menu; assignable on auction edit screen and seller submit/edit listing forms (always-visible Category field).
 * Admin auction gallery thumbnails layout fixed (grid + remove control; styles inlined on CPT editor).
 * Holders can assign auction categories (`assign_terms` → edit_own_auctions); default General category seeded when empty.

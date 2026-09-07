@@ -82,16 +82,18 @@ final class PermalinkSettings {
 		$prev_cat     = self::category_base();
 
 		if ( isset( $_POST[ self::OPTION_AUCTION_BASE ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+			$auction_base = sanitize_text_field( wp_unslash( (string) $_POST[ self::OPTION_AUCTION_BASE ] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 			update_option(
 				self::OPTION_AUCTION_BASE,
-				self::sanitize_base( (string) wp_unslash( $_POST[ self::OPTION_AUCTION_BASE ] ), self::DEFAULT_AUCTION_BASE ), // phpcs:ignore WordPress.Security.NonceVerification.Missing
+				self::sanitize_base( $auction_base, self::DEFAULT_AUCTION_BASE ),
 				false
 			);
 		}
 		if ( isset( $_POST[ self::OPTION_CATEGORY_BASE ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+			$category_base = sanitize_text_field( wp_unslash( (string) $_POST[ self::OPTION_CATEGORY_BASE ] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 			update_option(
 				self::OPTION_CATEGORY_BASE,
-				self::sanitize_base( (string) wp_unslash( $_POST[ self::OPTION_CATEGORY_BASE ] ), self::DEFAULT_CATEGORY_BASE ), // phpcs:ignore WordPress.Security.NonceVerification.Missing
+				self::sanitize_base( $category_base, self::DEFAULT_CATEGORY_BASE ),
 				false
 			);
 		}

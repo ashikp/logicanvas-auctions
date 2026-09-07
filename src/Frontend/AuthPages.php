@@ -379,7 +379,7 @@ final class AuthPages {
 		}
 
 		$login = isset( $_POST['log'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['log'] ) ) : '';
-		$pass  = isset( $_POST['pwd'] ) ? wp_check_invalid_utf8( (string) wp_unslash( $_POST['pwd'] ) ) : '';
+		$pass  = $this->post_password( 'pwd' );
 		if ( '' === $login || '' === $pass ) {
 			$this->fail( __( 'Enter your email or username and password.', 'logicanvas-auctions' ) );
 			return;
@@ -429,8 +429,8 @@ final class AuthPages {
 		}
 
 		$email    = isset( $_POST['user_email'] ) ? sanitize_email( wp_unslash( (string) $_POST['user_email'] ) ) : '';
-		$password = isset( $_POST['user_pass'] ) ? wp_check_invalid_utf8( (string) wp_unslash( $_POST['user_pass'] ) ) : '';
-		$confirm  = isset( $_POST['user_pass_confirm'] ) ? wp_check_invalid_utf8( (string) wp_unslash( $_POST['user_pass_confirm'] ) ) : '';
+		$password = $this->post_password( 'user_pass' );
+		$confirm  = $this->post_password( 'user_pass_confirm' );
 		$first    = isset( $_POST['first_name'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['first_name'] ) ) : '';
 		$last     = isset( $_POST['last_name'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['last_name'] ) ) : '';
 
@@ -545,8 +545,8 @@ final class AuthPages {
 
 		$login = isset( $_POST['rp_login'] ) ? sanitize_user( wp_unslash( (string) $_POST['rp_login'] ) ) : $this->reset_login();
 		$key   = isset( $_POST['rp_key'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['rp_key'] ) ) : $this->reset_key();
-		$pass  = isset( $_POST['pass1'] ) ? wp_check_invalid_utf8( (string) wp_unslash( $_POST['pass1'] ) ) : '';
-		$pass2 = isset( $_POST['pass2'] ) ? wp_check_invalid_utf8( (string) wp_unslash( $_POST['pass2'] ) ) : '';
+		$pass  = $this->post_password( 'pass1' );
+		$pass2 = $this->post_password( 'pass2' );
 
 		$user = check_password_reset_key( $key, $login );
 		if ( ! $user instanceof WP_User ) {
@@ -662,6 +662,27 @@ final class AuthPages {
 		return (bool) apply_filters( 'wcap_allow_frontend_registration', true );
 	}
 
+
+	/**
+	 * Read a password from POST without sanitize_text_field (which alters valid password characters).
+	 *
+	 * Nonce checks happen in the calling handlers before this is used.
+	 */
+	private function post_password( string $key ): string {
+		if ( ! isset( $_POST[ $key ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified by caller.
+			return '';
+		}
+
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing -- Passwords must not be sanitized like free text.
+		$raw = wp_unslash( $_POST[ $key ] );
+
+		if ( ! is_string( $raw ) ) {
+			return '';
+		}
+
+		$checked = wp_check_invalid_utf8( $raw );
+		return is_string( $checked ) ? $checked : '';
+	}
 
 	private function rate_ok( string $action ): bool {
 		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( (string) $_SERVER['REMOTE_ADDR'] ) ) : '';

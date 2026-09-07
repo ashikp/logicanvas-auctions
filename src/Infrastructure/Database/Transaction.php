@@ -20,8 +20,7 @@ final class Transaction {
 		global $wpdb;
 
 		if ( 0 === self::$depth ) {
-			// Satisfy DirectDatabaseQuery.NoCaching for transactional control statements.
-			wp_cache_get( 'wcap_db_tx', QueryCache::GROUP );
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Transactional control; not a cacheable read.
 			$wpdb->query( 'START TRANSACTION' );
 		}
 
@@ -31,14 +30,14 @@ final class Transaction {
 			$result = $callback( $wpdb );
 			--self::$depth;
 			if ( 0 === self::$depth ) {
-				wp_cache_get( 'wcap_db_tx', QueryCache::GROUP );
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Transactional control; not a cacheable read.
 				$wpdb->query( 'COMMIT' );
 			}
 			return $result;
 		} catch ( Throwable $e ) {
 			--self::$depth;
 			if ( 0 === self::$depth ) {
-				wp_cache_get( 'wcap_db_tx', QueryCache::GROUP );
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Transactional control; not a cacheable read.
 				$wpdb->query( 'ROLLBACK' );
 			}
 			throw $e;
