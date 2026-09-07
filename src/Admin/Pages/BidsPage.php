@@ -23,25 +23,28 @@ final class BidsPage {
 
 		global $wpdb;
 		$table      = Config::table( Config::TABLE_BIDS );
-		$auction_id = isset( $_GET['auction_id'] ) ? absint( $_GET['auction_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		if ( $auction_id ) {
-			$rows = QueryCache::remember(
-				QueryCache::key( 'admin_bids', $auction_id ),
-				30,
-				static function () use ( $wpdb, $table, $auction_id ) {
-					wp_cache_get( 'wcap_db', QueryCache::GROUP );
-					return $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM %i WHERE auction_id = %d ORDER BY id DESC LIMIT 100', $table, $auction_id ), ARRAY_A );
-				}
-			);
-		} else {
-			$rows = QueryCache::remember(
-				QueryCache::key( 'admin_bids', 0 ),
-				30,
-				static function () use ( $wpdb, $table ) {
-					wp_cache_get( 'wcap_db', QueryCache::GROUP );
-					return $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM %i ORDER BY id DESC LIMIT 100', $table ), ARRAY_A );
-				}
-			);
+		$auction_id = isset( $_GET['auction_id'] ) ? absint( wp_unslash( (string) $_GET['auction_id'] ) ) : 0;
+		$cache_key  = QueryCache::key( 'admin_bids', $auction_id );
+		$rows       = wp_cache_get( $cache_key, QueryCache::GROUP );
+
+		if ( false === $rows || ! is_array( $rows ) ) {
+			if ( $auction_id ) {
+				$rows = $wpdb->get_results(
+					$wpdb->prepare(
+						'SELECT * FROM %i WHERE auction_id = %d ORDER BY id DESC LIMIT 100',
+						$table,
+						$auction_id
+					),
+					ARRAY_A
+				);
+			} else {
+				$rows = $wpdb->get_results(
+					$wpdb->prepare( 'SELECT * FROM %i ORDER BY id DESC LIMIT 100', $table ),
+					ARRAY_A
+				);
+			}
+			$rows = is_array( $rows ) ? $rows : array();
+			wp_cache_set( $cache_key, $rows, QueryCache::GROUP, 30 );
 		}
 
 		Screen::open(

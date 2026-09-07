@@ -2,11 +2,8 @@
 /**
  * wpdb bid repository.
  *
- * Custom InnoDB bids table — WP_Query / get_posts cannot serve these reads/writes.
- * Object caching is handled via QueryCache around read methods; writes bust the group.
- *
- * phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery
- * phpcs:disable WordPress.DB.DirectDatabaseQuery.NoCaching
+ * Custom InnoDB bids table — WP_Query cannot serve these reads/writes.
+ * Each method caches in the same scope as the $wpdb call (WPCS requirement).
  *
  * @package LogicanvasAuctions
  */
@@ -48,50 +45,55 @@ final class WpdbBidRepository implements BidRepositoryInterface {
 			)
 		);
 
+		$insert_id = (int) $wpdb->insert_id;
+		wp_cache_delete( QueryCache::key( 'bid', $insert_id ), QueryCache::GROUP );
+		wp_cache_delete( QueryCache::key( 'bids_list', (int) $data['auction_id'] ), QueryCache::GROUP );
+		wp_cache_delete( QueryCache::key( 'bid_highest', (int) $data['auction_id'] ), QueryCache::GROUP );
+		wp_cache_delete( QueryCache::key( 'bids_accepted', (int) $data['auction_id'] ), QueryCache::GROUP );
+		wp_cache_delete( QueryCache::key( 'bid_count', (int) $data['auction_id'], 1 ), QueryCache::GROUP );
+		wp_cache_delete( QueryCache::key( 'bid_count', (int) $data['auction_id'], 0 ), QueryCache::GROUP );
 		QueryCache::bust_auction( (int) $data['auction_id'] );
 
-		return (int) $wpdb->insert_id;
+		return $insert_id;
 	}
 
 	public function find( int $bid_id ): ?Bid {
 		global $wpdb;
 
-		$table = $this->table();
-		$row   = QueryCache::remember(
-			QueryCache::key( 'bid', $bid_id ),
-			60,
-			static function () use ( $wpdb, $table, $bid_id ) {
-				return $wpdb->get_row(
-					$wpdb->prepare( 'SELECT * FROM %i WHERE id = %d', $table, $bid_id ),
-					ARRAY_A
-				);
-			}
-		);
+		$cache_key = QueryCache::key( 'bid', $bid_id );
+		$row       = wp_cache_get( $cache_key, QueryCache::GROUP );
 
-		return is_array( $row ) ? new Bid( $row ) : null;
+		if ( false === $row ) {
+			$row = $wpdb->get_row(
+				$wpdb->prepare( 'SELECT * FROM %i WHERE id = %d', $this->table(), $bid_id ),
+				ARRAY_A
+			);
+			wp_cache_set( $cache_key, is_array( $row ) ? $row : array(), QueryCache::GROUP, 60 );
+		}
+
+		return is_array( $row ) && isset( $row['id'] ) ? new Bid( $row ) : null;
 	}
 
 	public function find_by_idempotency( int $auction_id, string $key ): ?Bid {
 		global $wpdb;
 
-		$table = $this->table();
-		$row   = QueryCache::remember(
-			QueryCache::key( 'bid_idem', $auction_id, $key ),
-			30,
-			static function () use ( $wpdb, $table, $auction_id, $key ) {
-				return $wpdb->get_row(
-					$wpdb->prepare(
-						'SELECT * FROM %i WHERE auction_id = %d AND idempotency_key = %s',
-						$table,
-						$auction_id,
-						$key
-					),
-					ARRAY_A
-				);
-			}
-		);
+		$cache_key = QueryCache::key( 'bid_idem', $auction_id, $key );
+		$row       = wp_cache_get( $cache_key, QueryCache::GROUP );
 
-		return is_array( $row ) ? new Bid( $row ) : null;
+		if ( false === $row ) {
+			$row = $wpdb->get_row(
+				$wpdb->prepare(
+					'SELECT * FROM %i WHERE auction_id = %d AND idempotency_key = %s',
+					$this->table(),
+					$auction_id,
+					$key
+				),
+				ARRAY_A
+			);
+			wp_cache_set( $cache_key, is_array( $row ) ? $row : array(), QueryCache::GROUP, 30 );
+		}
+
+		return is_array( $row ) && isset( $row['id'] ) ? new Bid( $row ) : null;
 	}
 
 	/**
@@ -100,29 +102,27 @@ final class WpdbBidRepository implements BidRepositoryInterface {
 	public function for_auction( int $auction_id, int $limit = 50, int $offset = 0, bool $accepted_only = true ): array {
 		global $wpdb;
 
-		$table = $this->table();
-		$rows  = QueryCache::remember(
-			QueryCache::key( 'bids_list', $auction_id, $limit, $offset, $accepted_only ? 1 : 0 ),
-			30,
-			static function () use ( $wpdb, $table, $auction_id, $limit, $offset, $accepted_only ) {
-				if ( $accepted_only ) {
-					return $wpdb->get_results(
-						$wpdb->prepare(
-							'SELECT * FROM %i WHERE auction_id = %d AND status = %s ORDER BY created_at_utc DESC, id DESC LIMIT %d OFFSET %d',
-							$table,
-							$auction_id,
-							Bid::STATUS_ACCEPTED,
-							$limit,
-							$offset
-						),
-						ARRAY_A
-					);
-				}
+		$cache_key = QueryCache::key( 'bids_list', $auction_id, $limit, $offset, $accepted_only ? 1 : 0 );
+		$rows      = wp_cache_get( $cache_key, QueryCache::GROUP );
 
-				return $wpdb->get_results(
+		if ( false === $rows ) {
+			if ( $accepted_only ) {
+				$rows = $wpdb->get_results(
+					$wpdb->prepare(
+						'SELECT * FROM %i WHERE auction_id = %d AND status = %s ORDER BY created_at_utc DESC, id DESC LIMIT %d OFFSET %d',
+						$this->table(),
+						$auction_id,
+						Bid::STATUS_ACCEPTED,
+						$limit,
+						$offset
+					),
+					ARRAY_A
+				);
+			} else {
+				$rows = $wpdb->get_results(
 					$wpdb->prepare(
 						'SELECT * FROM %i WHERE auction_id = %d ORDER BY created_at_utc DESC, id DESC LIMIT %d OFFSET %d',
-						$table,
+						$this->table(),
 						$auction_id,
 						$limit,
 						$offset
@@ -130,7 +130,9 @@ final class WpdbBidRepository implements BidRepositoryInterface {
 					ARRAY_A
 				);
 			}
-		);
+			$rows = is_array( $rows ) ? $rows : array();
+			wp_cache_set( $cache_key, $rows, QueryCache::GROUP, 30 );
+		}
 
 		if ( ! is_array( $rows ) ) {
 			return array();
@@ -142,24 +144,23 @@ final class WpdbBidRepository implements BidRepositoryInterface {
 	public function highest_accepted( int $auction_id ): ?Bid {
 		global $wpdb;
 
-		$table = $this->table();
-		$row   = QueryCache::remember(
-			QueryCache::key( 'bid_highest', $auction_id ),
-			30,
-			static function () use ( $wpdb, $table, $auction_id ) {
-				return $wpdb->get_row(
-					$wpdb->prepare(
-						'SELECT * FROM %i WHERE auction_id = %d AND status = %s ORDER BY amount DESC, id ASC LIMIT 1',
-						$table,
-						$auction_id,
-						Bid::STATUS_ACCEPTED
-					),
-					ARRAY_A
-				);
-			}
-		);
+		$cache_key = QueryCache::key( 'bid_highest', $auction_id );
+		$row       = wp_cache_get( $cache_key, QueryCache::GROUP );
 
-		return is_array( $row ) ? new Bid( $row ) : null;
+		if ( false === $row ) {
+			$row = $wpdb->get_row(
+				$wpdb->prepare(
+					'SELECT * FROM %i WHERE auction_id = %d AND status = %s ORDER BY amount DESC, id ASC LIMIT 1',
+					$this->table(),
+					$auction_id,
+					Bid::STATUS_ACCEPTED
+				),
+				ARRAY_A
+			);
+			wp_cache_set( $cache_key, is_array( $row ) ? $row : array(), QueryCache::GROUP, 30 );
+		}
+
+		return is_array( $row ) && isset( $row['id'] ) ? new Bid( $row ) : null;
 	}
 
 	/**
@@ -168,22 +169,22 @@ final class WpdbBidRepository implements BidRepositoryInterface {
 	public function accepted_for_auction( int $auction_id ): array {
 		global $wpdb;
 
-		$table = $this->table();
-		$rows  = QueryCache::remember(
-			QueryCache::key( 'bids_accepted', $auction_id ),
-			30,
-			static function () use ( $wpdb, $table, $auction_id ) {
-				return $wpdb->get_results(
-					$wpdb->prepare(
-						'SELECT * FROM %i WHERE auction_id = %d AND status = %s ORDER BY id ASC',
-						$table,
-						$auction_id,
-						Bid::STATUS_ACCEPTED
-					),
-					ARRAY_A
-				);
-			}
-		);
+		$cache_key = QueryCache::key( 'bids_accepted', $auction_id );
+		$rows      = wp_cache_get( $cache_key, QueryCache::GROUP );
+
+		if ( false === $rows ) {
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					'SELECT * FROM %i WHERE auction_id = %d AND status = %s ORDER BY id ASC',
+					$this->table(),
+					$auction_id,
+					Bid::STATUS_ACCEPTED
+				),
+				ARRAY_A
+			);
+			$rows = is_array( $rows ) ? $rows : array();
+			wp_cache_set( $cache_key, $rows, QueryCache::GROUP, 30 );
+		}
 
 		if ( ! is_array( $rows ) ) {
 			return array();
@@ -206,6 +207,7 @@ final class WpdbBidRepository implements BidRepositoryInterface {
 			array( 'id' => $bid_id )
 		);
 
+		wp_cache_delete( QueryCache::key( 'bid', $bid_id ), QueryCache::GROUP );
 		QueryCache::flush_group();
 
 		return false !== $result;
@@ -214,57 +216,55 @@ final class WpdbBidRepository implements BidRepositoryInterface {
 	public function count_for_auction( int $auction_id, bool $accepted_only = true ): int {
 		global $wpdb;
 
-		$table = $this->table();
+		$cache_key = QueryCache::key( 'bid_count', $auction_id, $accepted_only ? 1 : 0 );
+		$count     = wp_cache_get( $cache_key, QueryCache::GROUP );
 
-		return (int) QueryCache::remember(
-			QueryCache::key( 'bid_count', $auction_id, $accepted_only ? 1 : 0 ),
-			30,
-			static function () use ( $wpdb, $table, $auction_id, $accepted_only ) {
-				if ( $accepted_only ) {
-					return $wpdb->get_var(
-						$wpdb->prepare(
-							'SELECT COUNT(*) FROM %i WHERE auction_id = %d AND status = %s',
-							$table,
-							$auction_id,
-							Bid::STATUS_ACCEPTED
-						)
-					);
-				}
-
-				return $wpdb->get_var(
+		if ( false === $count ) {
+			if ( $accepted_only ) {
+				$count = $wpdb->get_var(
+					$wpdb->prepare(
+						'SELECT COUNT(*) FROM %i WHERE auction_id = %d AND status = %s',
+						$this->table(),
+						$auction_id,
+						Bid::STATUS_ACCEPTED
+					)
+				);
+			} else {
+				$count = $wpdb->get_var(
 					$wpdb->prepare(
 						'SELECT COUNT(*) FROM %i WHERE auction_id = %d',
-						$table,
+						$this->table(),
 						$auction_id
 					)
 				);
 			}
-		);
+			$count = (int) $count;
+			wp_cache_set( $cache_key, $count, QueryCache::GROUP, 30 );
+		}
+
+		return (int) $count;
 	}
 
 	public function proxy_max_for( int $auction_id, int $bidder_id ): ?string {
 		global $wpdb;
 
-		$table = $this->table();
-		$val   = QueryCache::remember(
-			QueryCache::key( 'bid_proxy_max', $auction_id, $bidder_id ),
-			30,
-			static function () use ( $wpdb, $table, $auction_id, $bidder_id ) {
-				return $wpdb->get_var(
-					$wpdb->prepare(
-						'SELECT COALESCE(max_amount, amount) FROM %i WHERE auction_id = %d AND bidder_id = %d AND status = %s ORDER BY id DESC LIMIT 1',
-						$table,
-						$auction_id,
-						$bidder_id,
-						Bid::STATUS_ACCEPTED
-					)
-				);
-			}
-		);
+		$cache_key = QueryCache::key( 'bid_proxy_max', $auction_id, $bidder_id );
+		$val       = wp_cache_get( $cache_key, QueryCache::GROUP );
 
-		return $val ? (string) $val : null;
+		if ( false === $val ) {
+			$val = $wpdb->get_var(
+				$wpdb->prepare(
+					'SELECT COALESCE(max_amount, amount) FROM %i WHERE auction_id = %d AND bidder_id = %d AND status = %s ORDER BY id DESC LIMIT 1',
+					$this->table(),
+					$auction_id,
+					$bidder_id,
+					Bid::STATUS_ACCEPTED
+				)
+			);
+			wp_cache_set( $cache_key, null === $val ? '' : (string) $val, QueryCache::GROUP, 30 );
+		}
+
+		$val = (string) $val;
+		return '' !== $val ? $val : null;
 	}
 }
-
-// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery
-// phpcs:enable WordPress.DB.DirectDatabaseQuery.NoCaching

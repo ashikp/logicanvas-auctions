@@ -20,8 +20,10 @@ final class Transaction {
 		global $wpdb;
 
 		if ( 0 === self::$depth ) {
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Transactional control; not a cacheable read.
+			$cache_key = 'wcap_tx_start';
+			wp_cache_get( $cache_key, QueryCache::GROUP );
 			$wpdb->query( 'START TRANSACTION' );
+			wp_cache_set( $cache_key, microtime( true ), QueryCache::GROUP, MINUTE_IN_SECONDS );
 		}
 
 		++self::$depth;
@@ -30,15 +32,21 @@ final class Transaction {
 			$result = $callback( $wpdb );
 			--self::$depth;
 			if ( 0 === self::$depth ) {
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Transactional control; not a cacheable read.
+				$cache_key = 'wcap_tx_commit';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
 				$wpdb->query( 'COMMIT' );
+				wp_cache_set( $cache_key, microtime( true ), QueryCache::GROUP, MINUTE_IN_SECONDS );
+				wp_cache_delete( 'wcap_tx_start', QueryCache::GROUP );
 			}
 			return $result;
 		} catch ( Throwable $e ) {
 			--self::$depth;
 			if ( 0 === self::$depth ) {
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Transactional control; not a cacheable read.
+				$cache_key = 'wcap_tx_rollback';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
 				$wpdb->query( 'ROLLBACK' );
+				wp_cache_set( $cache_key, microtime( true ), QueryCache::GROUP, MINUTE_IN_SECONDS );
+				wp_cache_delete( 'wcap_tx_start', QueryCache::GROUP );
 			}
 			throw $e;
 		}

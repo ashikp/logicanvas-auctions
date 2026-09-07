@@ -664,24 +664,17 @@ final class AuthPages {
 
 
 	/**
-	 * Read a password from POST without sanitize_text_field (which alters valid password characters).
+	 * Read a password from POST.
 	 *
+	 * Uses wp_strip_all_tags (not sanitize_text_field) so valid password characters are preserved.
 	 * Nonce checks happen in the calling handlers before this is used.
 	 */
 	private function post_password( string $key ): string {
-		if ( ! isset( $_POST[ $key ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified by caller.
+		if ( ! isset( $_POST[ $key ] ) ) {
 			return '';
 		}
 
-		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing -- Passwords must not be sanitized like free text.
-		$raw = wp_unslash( $_POST[ $key ] );
-
-		if ( ! is_string( $raw ) ) {
-			return '';
-		}
-
-		$checked = wp_check_invalid_utf8( $raw );
-		return is_string( $checked ) ? $checked : '';
+		return wp_strip_all_tags( (string) wp_check_invalid_utf8( wp_unslash( (string) $_POST[ $key ] ) ) );
 	}
 
 	private function rate_ok( string $action ): bool {

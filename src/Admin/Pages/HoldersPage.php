@@ -26,9 +26,7 @@ final class HoldersPage {
 		$cache_key = QueryCache::key( 'admin_holders' );
 		$rows      = wp_cache_get( $cache_key, QueryCache::GROUP );
 
-		if ( ! is_array( $rows ) ) {
-			// Custom plugin table — not available via WP_Query / get_posts.
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		if ( false === $rows || ! is_array( $rows ) ) {
 			$rows = $wpdb->get_results(
 				$wpdb->prepare( 'SELECT * FROM %i ORDER BY id DESC LIMIT 100', $table ),
 				ARRAY_A
@@ -44,7 +42,7 @@ final class HoldersPage {
 		ActionUI::ensure_modal();
 		Screen::panel_open();
 		echo '<table class="widefat striped wcap-admin-table"><thead><tr><th>ID</th><th>' . esc_html__( 'User', 'logicanvas-auctions' ) . '</th><th>' . esc_html__( 'Status', 'logicanvas-auctions' ) . '</th><th>' . esc_html__( 'Company', 'logicanvas-auctions' ) . '</th><th>' . esc_html__( 'Actions', 'logicanvas-auctions' ) . '</th></tr></thead><tbody>';
-		foreach ( (array) $rows as $row ) {
+		foreach ( $rows as $row ) {
 			$user = get_user_by( 'id', (int) $row['user_id'] );
 			echo '<tr>';
 			echo '<td>' . esc_html( (string) $row['id'] ) . '</td>';
