@@ -48,6 +48,7 @@ final class BidsPage {
 			__( 'Bid audit', 'logicanvas-auctions' ),
 			__( 'Inspect accepted bids and void a bid only when you record a reason.', 'logicanvas-auctions' )
 		);
+		ActionUI::ensure_modal();
 		Screen::panel_open();
 		echo '<table class="widefat striped wcap-admin-table"><thead><tr><th>ID</th><th>' . esc_html__( 'Auction', 'logicanvas-auctions' ) . '</th><th>' . esc_html__( 'Bidder', 'logicanvas-auctions' ) . '</th><th>' . esc_html__( 'Amount', 'logicanvas-auctions' ) . '</th><th>' . esc_html__( 'Status', 'logicanvas-auctions' ) . '</th><th>' . esc_html__( 'Time', 'logicanvas-auctions' ) . '</th><th>' . esc_html__( 'Actions', 'logicanvas-auctions' ) . '</th></tr></thead><tbody>';
 		foreach ( (array) $rows as $row ) {
@@ -79,6 +80,5 @@ final class BidsPage {
 		echo '</tbody></table>';
 		Screen::panel_close();
 		Screen::close();
-		ActionUI::ensure_modal();
 	}
 }

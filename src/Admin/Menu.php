@@ -31,18 +31,45 @@ final class Menu {
 		add_action( 'admin_post_wcap_view_payout_proof', array( $this, 'view_payout_proof' ) );
 		add_action( 'admin_notices', array( $this, 'render_notices' ) );
 		add_action( 'load-post-new.php', array( $this, 'redirect_new_auction' ) );
+		add_filter( 'parent_file', array( $this, 'fix_category_parent_menu' ) );
+		add_filter( 'submenu_file', array( $this, 'fix_category_submenu' ) );
 		add_filter( 'plugin_action_links_' . plugin_basename( Config::plugin_file() ), array( $this, 'plugin_action_links' ) );
 		add_filter( 'plugin_row_meta', array( $this, 'plugin_row_meta' ), 10, 2 );
 	}
 
-	public function enqueue_admin_assets( string $hook ): void {
+	/**
+	 * Keep Auctions menu open while managing auction categories.
+	 *
+	 * @param string $parent_file Parent file.
+	 */
+	public function fix_category_parent_menu( string $parent_file ): string {
 		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
-		$page   = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( (string) $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$is_wcap = ( $screen && str_starts_with( (string) $screen->id, 'auctions_page_wcap-' ) )
-			|| ( $screen && 'toplevel_page_wcap-dashboard' === $screen->id )
-			|| str_starts_with( $page, 'wcap-' );
+		if ( $screen && Config::TAXONOMY_CAT === $screen->taxonomy ) {
+			return 'wcap-dashboard';
+		}
+		return $parent_file;
+	}
 
-		if ( ! $is_wcap && ( ! $screen || Config::CPT !== $screen->post_type ) ) {
+	/**
+	 * Highlight Categories submenu on taxonomy screens.
+	 *
+	 * @param string|null $submenu_file Submenu file.
+	 */
+	public function fix_category_submenu( $submenu_file ): string {
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		if ( $screen && Config::TAXONOMY_CAT === $screen->taxonomy ) {
+			return 'edit-tags.php?taxonomy=' . Config::TAXONOMY_CAT . '&post_type=' . Config::CPT;
+		}
+		return (string) $submenu_file;
+	}
+
+	public function enqueue_admin_assets( string $hook ): void {
+		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( (string) $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		$is_wcap = str_starts_with( $page, 'wcap-' )
+			|| ( $screen && ( str_contains( (string) $screen->id, 'wcap-' ) || Config::CPT === $screen->post_type || Config::TAXONOMY_CAT === $screen->taxonomy ) );
+
+		if ( ! $is_wcap ) {
 			return;
 		}
 
@@ -53,16 +80,6 @@ final class Menu {
 			array( 'dashicons' ),
 			Config::VERSION
 		);
-
-		if ( $is_wcap ) {
-			wp_enqueue_script(
-				'wcap-admin-actions',
-				plugins_url( 'assets/dist/js/admin-actions.js', Config::plugin_file() ),
-				array(),
-				Config::VERSION,
-				true
-			);
-		}
 	}
 
 	/**
@@ -124,6 +141,13 @@ final class Menu {
 			add_submenu_page( 'wcap-dashboard', __( 'Add Auction', 'logicanvas-auctions' ), __( 'Add Auction', 'logicanvas-auctions' ), Config::CAP_CREATE_AUCTIONS, 'post-new.php?post_type=' . Config::CPT );
 		}
 		add_submenu_page( 'wcap-dashboard', __( 'All Auctions', 'logicanvas-auctions' ), __( 'All Auctions', 'logicanvas-auctions' ), Config::CAP_MODERATE_AUCTIONS, 'wcap-auctions', array( new AuctionsPage(), 'render' ) );
+		add_submenu_page(
+			'wcap-dashboard',
+			__( 'Auction Categories', 'logicanvas-auctions' ),
+			__( 'Categories', 'logicanvas-auctions' ),
+			Config::CAP_MODERATE_AUCTIONS,
+			'edit-tags.php?taxonomy=' . Config::TAXONOMY_CAT . '&post_type=' . Config::CPT
+		);
 		add_submenu_page( 'wcap-dashboard', __( 'Holders', 'logicanvas-auctions' ), __( 'Holders', 'logicanvas-auctions' ), Config::CAP_MANAGE_HOLDERS, 'wcap-holders', array( new HoldersPage(), 'render' ) );
 		add_submenu_page( 'wcap-dashboard', __( 'Bids', 'logicanvas-auctions' ), __( 'Bids', 'logicanvas-auctions' ), Config::CAP_MANAGE_BIDS, 'wcap-bids', array( new BidsPage(), 'render' ) );
 		add_submenu_page( 'wcap-dashboard', __( 'Awards', 'logicanvas-auctions' ), __( 'Awards', 'logicanvas-auctions' ), Config::CAP_MODERATE_AUCTIONS, 'wcap-awards', array( new AwardsPage(), 'render' ) );

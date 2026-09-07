@@ -36,6 +36,7 @@ final class HoldersPage {
 			__( 'Auction holders', 'logicanvas-auctions' ),
 			__( 'Approve third-party sellers before they can publish or host auctions.', 'logicanvas-auctions' )
 		);
+		ActionUI::ensure_modal();
 		Screen::panel_open();
 		echo '<table class="widefat striped wcap-admin-table"><thead><tr><th>ID</th><th>' . esc_html__( 'User', 'logicanvas-auctions' ) . '</th><th>' . esc_html__( 'Status', 'logicanvas-auctions' ) . '</th><th>' . esc_html__( 'Company', 'logicanvas-auctions' ) . '</th><th>' . esc_html__( 'Actions', 'logicanvas-auctions' ) . '</th></tr></thead><tbody>';
 		foreach ( (array) $rows as $row ) {
@@ -71,6 +72,5 @@ final class HoldersPage {
 		echo '</tbody></table>';
 		Screen::panel_close();
 		Screen::close();
-		ActionUI::ensure_modal();
 	}
 }

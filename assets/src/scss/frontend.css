@@ -319,7 +319,44 @@
 	display:block;width:100%;padding:12px 14px;border:1px solid var(--wcap-line);border-radius:12px;
 	background:#fff;color:var(--wcap-ink);font:400 15px inherit
 }
-.lead-form .full,.wcap-form .full,.wcap-product-source,.wcap-media-picker,.wcap-form-actions,.wcap-form-status{grid-column:1/-1}
+.lead-form .full,.wcap-form .full,.wcap-product-source,.wcap-media-picker,.wcap-form-actions,.wcap-form-status,.wcap-category-field,.wcap-field-category{grid-column:1/-1}
+.wcap-field-category{
+	display:flex !important;
+	flex-direction:column;
+	gap:8px;
+	visibility:visible !important;
+	opacity:1 !important;
+}
+.wcap-category-field{
+	display:block !important;
+	visibility:visible !important;
+	margin:0;
+	padding:14px 16px;
+	border:1px solid var(--wcap-line,#e2e8f0);
+	border-radius:14px;
+	background:#f8fafc;
+}
+.wcap-category-field legend{
+	padding:0 .35rem;
+	font-size:.85rem;
+	font-weight:700;
+	color:var(--wcap-ink,#0f172a);
+}
+.wcap-category-field__label{
+	display:flex !important;
+	flex-direction:column;
+	gap:8px;
+	margin:0;
+	width:100%;
+}
+.wcap-category-field select{
+	display:block !important;
+	width:100% !important;
+	max-width:100%;
+	box-sizing:border-box;
+}
+.wcap-category-field__empty{margin:0;color:var(--wcap-muted,#64748b);font-size:.9rem}
+.wcap-edit-main .wcap-category-field{margin:0}
 .wcap-form input[type="radio"],.wcap-form input[type="checkbox"]{width:auto;accent-color:var(--wcap-accent)}
 .wcap-product-source,.wcap-media-picker{border:1px solid var(--wcap-line);padding:16px;margin:0;background:#f8fafc;border-radius:14px}
 .wcap-product-source legend,.wcap-media-picker legend{font-weight:700;padding:0 .25rem}

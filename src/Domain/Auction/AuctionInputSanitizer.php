@@ -79,6 +79,7 @@ final class AuctionInputSanitizer {
 		'proxy_enabled',
 		'featured_image_id',
 		'gallery_ids',
+		'category_id',
 	);
 
 	/**
@@ -168,6 +169,10 @@ final class AuctionInputSanitizer {
 
 		if ( isset( $out['featured_image_id'] ) ) {
 			$out['featured_image_id'] = absint( $out['featured_image_id'] );
+		}
+
+		if ( isset( $out['category_id'] ) ) {
+			$out['category_id'] = absint( $out['category_id'] );
 		}
 
 		if ( isset( $out['gallery_ids'] ) ) {

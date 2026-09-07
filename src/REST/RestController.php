@@ -445,6 +445,10 @@ final class RestController {
 			'gallery_ids'             => array(
 				'sanitize_callback' => $ids,
 			),
+			'category_id'             => array(
+				'type'              => 'integer',
+				'sanitize_callback' => 'absint',
+			),
 			'starting_price'          => array(
 				'type'              => 'string',
 				'sanitize_callback' => $money,

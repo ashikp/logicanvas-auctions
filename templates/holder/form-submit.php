@@ -17,6 +17,22 @@ $wcap_can_publish  = ! empty( $wcap['can_publish'] );
 $wcap_can_existing = current_user_can( 'manage_options' );
 $wcap_start        = gmdate( 'Y-m-d\TH:i' );
 $wcap_end          = gmdate( 'Y-m-d\TH:i', time() + WEEK_IN_SECONDS );
+
+$wcap_cat_tax   = \LogicanvasAuctions\Config::TAXONOMY_CAT;
+$wcap_cat_terms = array();
+if ( taxonomy_exists( $wcap_cat_tax ) ) {
+	$wcap_got = get_terms(
+		array(
+			'taxonomy'   => $wcap_cat_tax,
+			'hide_empty' => false,
+			'orderby'    => 'name',
+			'order'      => 'ASC',
+		)
+	);
+	if ( is_array( $wcap_got ) && ! is_wp_error( $wcap_got ) ) {
+		$wcap_cat_terms = $wcap_got;
+	}
+}
 ?>
 <form class="wcap-form wcap-submit-form lead-form" data-wcap-submit<?php echo $wcap_can_publish ? ' data-wcap-can-publish="1"' : ''; ?>>
 	<?php if ( $wcap_can_existing ) : ?>
@@ -43,6 +59,17 @@ $wcap_end          = gmdate( 'Y-m-d\TH:i', time() + WEEK_IN_SECONDS );
 	<?php else : ?>
 		<input type="hidden" name="product_source" value="new" />
 	<?php endif; ?>
+
+	<label class="full wcap-field-category">
+		<?php esc_html_e( 'Category', 'logicanvas-auctions' ); ?>
+		<select name="category_id" id="wcap_category_id" required>
+			<option value=""><?php esc_html_e( 'Select a category', 'logicanvas-auctions' ); ?></option>
+			<?php foreach ( $wcap_cat_terms as $wcap_term ) : ?>
+				<?php if ( ! $wcap_term instanceof WP_Term ) { continue; } ?>
+				<option value="<?php echo esc_attr( (string) $wcap_term->term_id ); ?>"><?php echo esc_html( (string) $wcap_term->name ); ?></option>
+			<?php endforeach; ?>
+		</select>
+	</label>
 
 	<div class="full" data-wcap-source-panel="new">
 		<label><?php esc_html_e( 'Title', 'logicanvas-auctions' ); ?>

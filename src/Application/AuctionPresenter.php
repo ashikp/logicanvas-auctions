@@ -73,6 +73,7 @@ final class AuctionPresenter {
 			'condition'        => sanitize_text_field( (string) get_post_meta( $auction->id(), '_wcap_condition', true ) ),
 			'fulfilment'       => sanitize_key( (string) ( $auction->to_array()['fulfilment_type'] ?? 'shipping' ) ),
 			'fulfilment_notes' => sanitize_textarea_field( (string) get_post_meta( $auction->id(), '_wcap_fulfilment_notes', true ) ),
+			'category'         => $this->primary_category( $auction->id() ),
 			'permalink'        => get_permalink( $auction->id() ),
 			'realtime_mode'    => (string) Settings::get()['realtime_mode'],
 		);
@@ -305,5 +306,29 @@ final class AuctionPresenter {
 			return (string) $items[0]['full'];
 		}
 		return (string) $items[0]['thumb'];
+	}
+
+	/**
+	 * @return array{id:int,name:string,slug:string,url:string}
+	 */
+	private function primary_category( int $auction_id ): array {
+		$empty = array(
+			'id'   => 0,
+			'name' => '',
+			'slug' => '',
+			'url'  => '',
+		);
+		$terms = get_the_terms( $auction_id, \LogicanvasAuctions\Config::TAXONOMY_CAT );
+		if ( ! is_array( $terms ) || ! $terms ) {
+			return $empty;
+		}
+		$term = $terms[0];
+		$link = get_term_link( $term );
+		return array(
+			'id'   => (int) $term->term_id,
+			'name' => (string) $term->name,
+			'slug' => (string) $term->slug,
+			'url'  => is_wp_error( $link ) ? '' : (string) $link,
+		);
 	}
 }

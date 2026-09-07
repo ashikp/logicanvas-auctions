@@ -20,6 +20,8 @@ final class AuctionEditor {
 		add_action( 'add_meta_boxes', array( $this, 'meta_boxes' ) );
 		add_action( 'save_post_' . Config::CPT, array( $this, 'save' ), 20, 2 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'scripts' ) );
+		add_action( 'admin_head-post.php', array( $this, 'print_gallery_css' ) );
+		add_action( 'admin_head-post-new.php', array( $this, 'print_gallery_css' ) );
 		add_action( 'admin_notices', array( $this, 'notices' ) );
 		add_filter( 'default_hidden_meta_boxes', array( $this, 'unhide_meta_boxes' ), 10, 2 );
 		add_filter( 'hidden_meta_boxes', array( $this, 'unhide_meta_boxes' ), 10, 2 );
@@ -82,22 +84,21 @@ final class AuctionEditor {
 	}
 
 	public function scripts( string $hook ): void {
-		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
-		if ( ! $screen || Config::CPT !== $screen->post_type ) {
-			return;
-		}
-
-		if ( ! in_array( $hook, array( 'post.php', 'post-new.php' ), true ) ) {
+		if ( ! $this->is_auction_editor_screen( $hook ) ) {
 			return;
 		}
 
 		wp_enqueue_media();
+
+		$css_path = Config::plugin_dir() . 'assets/dist/css/admin.css';
+		$ver      = is_readable( $css_path ) ? (string) filemtime( $css_path ) : Config::VERSION;
 		wp_enqueue_style(
 			'wcap-admin',
 			plugins_url( 'assets/dist/css/admin.css', Config::plugin_file() ),
 			array(),
-			Config::VERSION
+			$ver
 		);
+		wp_add_inline_style( 'wcap-admin', $this->gallery_css() );
 
 		if ( wp_script_is( 'wc-enhanced-select', 'registered' ) ) {
 			wp_enqueue_script( 'wc-enhanced-select' );
@@ -108,6 +109,108 @@ final class AuctionEditor {
 		wp_register_script( $handle, false, array( 'jquery' ), Config::VERSION, true );
 		wp_enqueue_script( $handle );
 		wp_add_inline_script( $handle, $this->editor_js() );
+	}
+
+	/**
+	 * Detect auction CPT edit/new screens even when get_current_screen() is incomplete.
+	 */
+	private function is_auction_editor_screen( string $hook ): bool {
+		if ( ! in_array( $hook, array( 'post.php', 'post-new.php' ), true ) ) {
+			return false;
+		}
+
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		if ( $screen && Config::CPT === $screen->post_type ) {
+			return true;
+		}
+
+		$post_type = isset( $_GET['post_type'] ) ? sanitize_key( wp_unslash( (string) $_GET['post_type'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( Config::CPT === $post_type ) {
+			return true;
+		}
+
+		$post_id = isset( $_GET['post'] ) ? absint( wp_unslash( $_GET['post'] ) ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		return $post_id > 0 && Config::CPT === get_post_type( $post_id );
+	}
+
+	/**
+	 * Print gallery CSS in admin head as a hard fallback (stylesheets can be blocked/deferred).
+	 */
+	public function print_gallery_css(): void {
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		$ok     = $screen && Config::CPT === $screen->post_type;
+		if ( ! $ok ) {
+			$post_id = isset( $_GET['post'] ) ? absint( wp_unslash( $_GET['post'] ) ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$ok      = ( $post_id > 0 && Config::CPT === get_post_type( $post_id ) )
+				|| ( isset( $_GET['post_type'] ) && Config::CPT === sanitize_key( wp_unslash( (string) $_GET['post_type'] ) ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		}
+		if ( ! $ok ) {
+			return;
+		}
+
+		echo '<style id="wcap-gallery-admin-css">' . $this->gallery_css() . '</style>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static CSS only.
+	}
+
+	/**
+	 * Critical gallery layout — also inlined so a missed stylesheet cannot leave full-size stacked images.
+	 */
+	private function gallery_css(): string {
+		return <<<'CSS'
+#wcap_auction_gallery .wcap-gallery-admin{
+	display:flex !important;
+	flex-wrap:wrap !important;
+	gap:10px !important;
+	margin:12px 0 !important;
+	min-height:24px;
+	align-items:flex-start;
+}
+#wcap_auction_gallery .wcap-gallery-admin__item{
+	position:relative !important;
+	box-sizing:border-box !important;
+	flex:0 0 96px !important;
+	width:96px !important;
+	height:96px !important;
+	max-width:96px !important;
+	margin:0 !important;
+	border:1px solid #e2e8f0 !important;
+	border-radius:10px !important;
+	overflow:hidden !important;
+	background:#f8fafc !important;
+}
+#wcap_auction_gallery .wcap-gallery-admin__item img{
+	display:block !important;
+	width:100% !important;
+	height:100% !important;
+	max-width:none !important;
+	object-fit:cover !important;
+}
+#wcap_auction_gallery .wcap-gallery-admin__remove{
+	position:absolute !important;
+	top:4px !important;
+	right:4px !important;
+	z-index:2;
+	display:inline-flex !important;
+	align-items:center;
+	justify-content:center;
+	width:24px !important;
+	height:24px !important;
+	margin:0 !important;
+	padding:0 !important;
+	border:0 !important;
+	border-radius:999px !important;
+	background:#0f172a !important;
+	color:#fff !important;
+	font-size:16px !important;
+	line-height:1 !important;
+	cursor:pointer;
+	text-decoration:none !important;
+	box-shadow:0 1px 2px rgba(15,23,42,.25);
+}
+#wcap_auction_gallery .wcap-gallery-admin__remove:hover{
+	background:#b91c1c !important;
+	color:#fff !important;
+}
+CSS;
 	}
 
 	private function editor_js(): string {

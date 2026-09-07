@@ -12,6 +12,7 @@ namespace LogicanvasAuctions;
 use LogicanvasAuctions\Admin\AuctionEditor;
 use LogicanvasAuctions\Admin\Menu;
 use LogicanvasAuctions\Admin\Notices;
+use LogicanvasAuctions\Admin\PermalinkSettings;
 use LogicanvasAuctions\Admin\ReviewPrompt;
 use LogicanvasAuctions\Admin\Settings;
 use LogicanvasAuctions\CLI\Commands;
@@ -79,6 +80,7 @@ final class Plugin {
 		$notices      = new Notices();
 		$notices->register();
 		( new ReviewPrompt() )->register();
+		( new PermalinkSettings() )->register();
 
 		if ( ! $dependencies->meets_php() ) {
 			$notices->add_php_notice();

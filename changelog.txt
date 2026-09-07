@@ -16,6 +16,10 @@ Release date: 2026-09-08
 * Frontend edit listing layout fixed (no lead-form grid crush); wp-admin auction editor restored with product, gallery, and full settings meta boxes.
 * Icon + text admin actions with shared reason/confirm popup (Auctions, Holders, Bids).
 * Admin review/rating popup every 2 weeks (snooze or mark already reviewed).
+* Auction Categories admin menu; assignable on auction edit screen and seller submit/edit listing forms (always-visible Category field).
+* Admin auction gallery thumbnails layout fixed (grid + remove control; styles inlined on CPT editor).
+* Holders can assign auction categories (`assign_terms` → edit_own_auctions); default General category seeded when empty.
+* Custom auction + category permalink bases under Settings → Permalinks.
 
 = 1.0.0 =
 Release date: 2026-08-01

@@ -167,6 +167,7 @@ final class AccountPage {
 			'gallery_previews'   => $previews,
 			'state'              => $auction->state(),
 			'permalink'          => (string) ( get_permalink( $auction_id ) ?: '' ),
+			'category_id'        => \LogicanvasAuctions\Support\AuctionCategory::primary_id( $auction_id ),
 		);
 	}
 

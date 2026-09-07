@@ -66,13 +66,20 @@ final class TemplateLoader {
 	}
 
 	public static function locate( string $name ): string {
-		$name     = str_replace( '..', '', $name );
+		$name   = str_replace( '..', '', $name );
+		$plugin = Config::plugin_dir() . 'templates/' . $name . '.php';
+
+		// Seller create/edit forms must always come from the plugin (category + save fields).
+		$locked = array( 'holder/form-submit', 'holder/form-edit' );
+		if ( in_array( $name, $locked, true ) && is_readable( $plugin ) ) {
+			return $plugin;
+		}
+
 		$override = locate_template( Config::TEMPLATE_DIR . '/' . $name . '.php' );
 		if ( $override ) {
 			return $override;
 		}
 
-		$plugin = Config::plugin_dir() . 'templates/' . $name . '.php';
 		return is_readable( $plugin ) ? $plugin : '';
 	}
 }

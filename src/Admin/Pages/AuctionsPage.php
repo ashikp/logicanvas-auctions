@@ -44,6 +44,7 @@ final class AuctionsPage {
 			__( 'Review listings, approve submissions, and close or cancel auctions.', 'logicanvas-auctions' ),
 			$action
 		);
+		ActionUI::ensure_modal();
 		Screen::panel_open();
 		echo '<table class="widefat striped wcap-admin-table"><thead><tr>';
 		echo '<th>' . esc_html__( 'ID', 'logicanvas-auctions' ) . '</th><th>' . esc_html__( 'Title', 'logicanvas-auctions' ) . '</th><th>' . esc_html__( 'Type', 'logicanvas-auctions' ) . '</th><th>' . esc_html__( 'State', 'logicanvas-auctions' ) . '</th><th>' . esc_html__( 'Price', 'logicanvas-auctions' ) . '</th><th>' . esc_html__( 'Actions', 'logicanvas-auctions' ) . '</th>';
@@ -59,6 +60,31 @@ final class AuctionsPage {
 			echo '<td><span class="wcap-state-pill">' . esc_html( $state ) . '</span></td>';
 			echo '<td>' . esc_html( $auction->current_amount()->formatted() . ' ' . $auction->currency() ) . '</td>';
 			echo '<td><div class="wcap-actions">';
+
+			$view_url = get_permalink( $auction->id() );
+			$edit_url = get_edit_post_link( $auction->id(), 'raw' );
+			if ( $view_url ) {
+				ActionUI::link(
+					array(
+						'url'     => (string) $view_url,
+						'label'   => __( 'View', 'logicanvas-auctions' ),
+						'icon'    => 'dashicons-visibility',
+						'variant' => 'neutral',
+						'target'  => '_blank',
+					)
+				);
+			}
+			if ( $edit_url ) {
+				ActionUI::link(
+					array(
+						'url'     => (string) $edit_url,
+						'label'   => __( 'Edit', 'logicanvas-auctions' ),
+						'icon'    => 'dashicons-edit',
+						'variant' => 'neutral',
+					)
+				);
+			}
+
 			if ( in_array( $state, array( AuctionState::DRAFT, AuctionState::PENDING_REVIEW, AuctionState::REJECTED ), true ) ) {
 				ActionUI::button(
 					array(
@@ -113,6 +139,5 @@ final class AuctionsPage {
 		echo '</tbody></table>';
 		Screen::panel_close();
 		Screen::close();
-		ActionUI::ensure_modal();
 	}
 }

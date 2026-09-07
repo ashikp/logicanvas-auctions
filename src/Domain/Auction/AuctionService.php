@@ -198,6 +198,12 @@ final class AuctionService {
 		update_post_meta( (int) $post_id, '_wcap_condition', sanitize_text_field( (string) ( $input['condition'] ?? '' ) ) );
 		update_post_meta( (int) $post_id, '_wcap_fulfilment_notes', sanitize_textarea_field( (string) ( $input['fulfilment_notes'] ?? '' ) ) );
 
+		if ( array_key_exists( 'category_id', $input ) ) {
+			\LogicanvasAuctions\Support\AuctionCategory::assign( (int) $post_id, (int) $input['category_id'] );
+		} else {
+			\LogicanvasAuctions\Support\AuctionCategory::assign( (int) $post_id, 0 );
+		}
+
 		$this->apply_media( (int) $post_id, $product_id, $user_id, $input );
 
 		/**
@@ -252,6 +258,10 @@ final class AuctionService {
 		}
 		if ( isset( $input['fulfilment_notes'] ) ) {
 			update_post_meta( $auction_id, '_wcap_fulfilment_notes', sanitize_textarea_field( (string) $input['fulfilment_notes'] ) );
+		}
+
+		if ( array_key_exists( 'category_id', $input ) ) {
+			\LogicanvasAuctions\Support\AuctionCategory::assign( $auction_id, (int) $input['category_id'] );
 		}
 
 		$featured = (int) ( $input['featured_image_id'] ?? 0 );

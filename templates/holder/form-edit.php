@@ -33,6 +33,23 @@ $wcap_fulfilment  = $wcap_val( 'fulfilment_type', 'shipping' );
 $wcap_state        = $wcap_val( 'state', 'draft' );
 $wcap_permalink    = $wcap_val( 'permalink' );
 $wcap_view_url     = $wcap_permalink ?: get_permalink( $wcap_auction_id );
+$wcap_category_id  = (int) $wcap_val( 'category_id', '0' );
+
+$wcap_cat_tax   = \LogicanvasAuctions\Config::TAXONOMY_CAT;
+$wcap_cat_terms = array();
+if ( taxonomy_exists( $wcap_cat_tax ) ) {
+	$wcap_got = get_terms(
+		array(
+			'taxonomy'   => $wcap_cat_tax,
+			'hide_empty' => false,
+			'orderby'    => 'name',
+			'order'      => 'ASC',
+		)
+	);
+	if ( is_array( $wcap_got ) && ! is_wp_error( $wcap_got ) ) {
+		$wcap_cat_terms = $wcap_got;
+	}
+}
 ?>
 <form
 	class="wcap-form wcap-edit-form"
@@ -62,6 +79,17 @@ $wcap_view_url     = $wcap_permalink ?: get_permalink( $wcap_auction_id );
 
 			<label class="full"><?php esc_html_e( 'Title', 'logicanvas-auctions' ); ?>
 				<input name="title" type="text" required maxlength="200" value="<?php echo esc_attr( $wcap_val( 'title' ) ); ?>" />
+			</label>
+
+			<label class="full wcap-field-category">
+				<?php esc_html_e( 'Category', 'logicanvas-auctions' ); ?>
+				<select name="category_id" id="wcap_category_id" required>
+					<option value=""><?php esc_html_e( 'Select a category', 'logicanvas-auctions' ); ?></option>
+					<?php foreach ( $wcap_cat_terms as $wcap_term ) : ?>
+						<?php if ( ! $wcap_term instanceof WP_Term ) { continue; } ?>
+						<option value="<?php echo esc_attr( (string) $wcap_term->term_id ); ?>" <?php selected( $wcap_category_id, (int) $wcap_term->term_id ); ?>><?php echo esc_html( (string) $wcap_term->name ); ?></option>
+					<?php endforeach; ?>
+				</select>
 			</label>
 
 			<label class="full"><?php esc_html_e( 'Short description / excerpt', 'logicanvas-auctions' ); ?>
