@@ -664,17 +664,29 @@ final class AuthPages {
 
 
 	/**
-	 * Read a password from POST.
+	 * Read a password from POST after the caller has verified the form nonce.
 	 *
-	 * Uses wp_strip_all_tags (not sanitize_text_field) so valid password characters are preserved.
-	 * Nonce checks happen in the calling handlers before this is used.
+	 * Uses filter_input (not $_POST) and strips tags without sanitize_text_field,
+	 * which would alter valid password characters.
 	 */
 	private function post_password( string $key ): string {
-		if ( ! isset( $_POST[ $key ] ) ) {
+		$allowed = array( 'pwd', 'user_pass', 'user_pass_confirm', 'pass1', 'pass2' );
+		if ( ! in_array( $key, $allowed, true ) ) {
 			return '';
 		}
 
-		return wp_strip_all_tags( (string) wp_check_invalid_utf8( wp_unslash( (string) $_POST[ $key ] ) ) );
+		$value = filter_input( INPUT_POST, $key );
+		if ( ! is_string( $value ) || '' === $value ) {
+			return '';
+		}
+
+		$value = wp_unslash( $value );
+		$value = wp_check_invalid_utf8( $value );
+		if ( ! is_string( $value ) || '' === $value ) {
+			return '';
+		}
+
+		return wp_strip_all_tags( $value );
 	}
 
 	private function rate_ok( string $action ): bool {

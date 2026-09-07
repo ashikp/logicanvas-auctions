@@ -23,7 +23,8 @@ final class BidsPage {
 
 		global $wpdb;
 		$table      = Config::table( Config::TABLE_BIDS );
-		$auction_id = isset( $_GET['auction_id'] ) ? absint( wp_unslash( (string) $_GET['auction_id'] ) ) : 0;
+		$raw_id     = filter_input( INPUT_GET, 'auction_id' );
+		$auction_id = ( is_string( $raw_id ) || is_int( $raw_id ) ) ? absint( $raw_id ) : 0;
 		$cache_key  = QueryCache::key( 'admin_bids', $auction_id );
 		$rows       = wp_cache_get( $cache_key, QueryCache::GROUP );
 
