@@ -5,35 +5,33 @@ Tags: woocommerce, auction, bidding, live auction, marketplace
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.1.0
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 WC requires at least: 8.0
 WC tested up to: 10.1
 
-Timed and live auctions for WooCommerce with server-side bidding, winner checkout, commission settlements, and optional Elementor widgets.
+Timed and live auctions for WooCommerce — clear setup, server-side bidding, and winner checkout through your store.
 
 == Description ==
 
-Logicanvas Auctions for WooCommerce lets the store owner and approved third-party auction holders list and run timed and live auctions. Registered bidders place bids that are validated and accepted only on the server. When an auction closes with a winner, checkout, tax, shipping, payment, and invoices run through WooCommerce — your store remains the merchant of record.
+Logicanvas Auctions for WooCommerce lets the store owner and approved third-party sellers run timed and live auctions. Bidders place bids that the server accepts. When someone wins, they pay through normal WooCommerce checkout — your store stays the merchant of record.
 
 WordPress.org: https://wordpress.org/plugins/logicanvas-auctions/
 Documentation: https://docs.logicanvas.io/logicanvas-auctions
 Plugin page: https://plugins.logicanvas.io/logicanvas-auctions
 
-WooCommerce is required. Elementor is optional. The plugin never stores card numbers and never bypasses your configured WooCommerce payment gateways.
+WooCommerce is required. Elementor is optional. The plugin never stores card numbers and never bypasses your payment gateways.
 
-= Important warning after install =
+= Getting started (about two minutes) =
 
-After you install and activate this plugin (and create frontend pages via Auctions → Setup), please be aware of these default behaviors:
+1. Activate the plugin (you land on Auctions → Setup).
+2. Click Create pages & continue. That adds ordinary WordPress pages for the catalog, dashboards, login, and winner payment.
+3. Add your first auction from Auctions → Add Auction.
 
-* The default WordPress login and register experience is replaced with the plugin login / register page. Visits to wp-login.php (login, register, and lost password) are redirected to the plugin’s dedicated Log in page.
-* The WooCommerce shop page is hidden from visitors.
-* WooCommerce single product pages are hidden from visitors.
+Safe by default: WordPress login and your WooCommerce shop stay unchanged. Optional modes (replace wp-login, hide the shop catalog, redirect sellers/bidders after login) are off unless you turn them on in Setup or Settings.
 
-Cart, checkout, and My Account remain available so auction winners can pay through WooCommerce.
-
-To restore the normal WooCommerce shop and product pages, go to Auctions → Settings and turn off “Disable WooCommerce shop and single product pages”. Auction-linked products may still stay hidden from the catalog so they can only be purchased through winner checkout.
+Pick a look under Auctions → Settings → Appearance (six themes, accent color, radius, density, cards, optional custom CSS).
 
 = Auction features =
 
@@ -133,12 +131,12 @@ Cookie authentication plus a REST nonce is required for write routes. Public GET
 1. Install and activate WooCommerce.
 2. From WordPress.org: Plugins → Add New → search for “Logicanvas Auctions for WooCommerce”, then install and activate.
    Or upload the plugin zip / copy the `logicanvas-auctions` folder into `wp-content/plugins/` and activate it.
-3. Open Auctions → Setup and create the frontend pages.
-4. Configure Auctions → Settings (increments, soft close, commission, payment deadline, login redirects).
+3. After activation you land on Auctions → Setup. Click Create pages & continue (optional store modes stay off unless you check them).
+4. Add your first auction from Auctions → Add Auction. Fine-tune increments, soft close, and commission under Auctions → Settings when you need them.
 5. Confirm Action Scheduler / WP-Cron is running under WooCommerce → Status → Scheduled Actions.
-6. Optional: approve holder applications under Auctions → Holders, then create your first timed or live auction.
+6. Optional: approve seller applications under Auctions → Holders.
 
-Important: After setup, login/register use the plugin pages, and the WooCommerce shop and single product pages are hidden by default. See the “Important warning after install” section above. Cart, checkout, and account stay available.
+Safe defaults: WordPress login and the WooCommerce shop stay available. Turn on “Replace WordPress login” or “Hide WooCommerce shop…” only if you want an auctions-first storefront.
 
 = Minimum requirements =
 
@@ -151,9 +149,13 @@ Do not activate this plugin on a site that already runs a branded auction-platfo
 
 == Frequently Asked Questions ==
 
+= How do I change the auction design? =
+
+Open Auctions → Settings → Appearance. Choose Classic, Midnight, Auction house, Ocean, Minimal, or Ember. Optionally override the accent color, corner radius, spacing density, card style, or add custom CSS scoped to .wcap-root.
+
 = Will this plugin replace my login and register pages? =
 
-Yes. After the plugin login page is created (Auctions → Setup), WordPress login, register, and lost-password requests (wp-login.php) are redirected to the plugin’s Log in page ([wcap_login]). Cart, checkout, and My Account are not replaced.
+No, not by default. Setup creates a Log in page with [wcap_login], but wp-login.php keeps working unless you enable “Replace WordPress login” in Setup or Settings. Escape hatch when that mode is on: wp-login.php?wcap_core=1. Cart, checkout, and My Account are never replaced.
 
 = Will the WooCommerce shop and product pages be hidden? =
 
@@ -249,7 +251,7 @@ Under the Auctions menu: Dashboard, Add Auction, All Auctions, Holders, Bids, Aw
 
 = Is there a dedicated login page? =
 
-Yes. Setup creates a Log in page with [wcap_login] for login, register, lost password, and reset flows. Settings can redirect users to holder/bidder dashboards after login and optionally restrict wp-admin for those roles.
+Yes. Setup creates a Log in page with [wcap_login] for login, register, lost password, and reset flows. Replacing wp-login.php, redirecting sellers/bidders after login, and blocking wp-admin for those roles are optional settings (off by default).
 
 = Which emails are sent? =
 
@@ -302,13 +304,42 @@ Yes: wp logicanvas-auctions list, close, overdue, rebuild, schema, diagnostics, 
 
 == Changelog ==
 
+= 1.2.0 =
+Release date: 2026-09-27
+
+* Clearer first run: activation opens Auctions → Setup; dashboard shows a short checklist until pages and a first lot exist.
+* Soft defaults: WordPress login and WooCommerce shop stay available unless you opt in (replace_wp_login, disable_wc_catalog, login redirects, wp-admin restrict).
+* Setup explains optional store modes; Settings copy matches. Existing sites that already used the plugin login page keep replace_wp_login on via a one-time migration.
+* Plugin list “Setup” action link; friendlier onboarding notice (dismissible).
+* Docs and FAQ no longer warn that login/shop are forced off after install.
+* Appearance settings: six design themes (Classic, Midnight, Auction house, Ocean, Minimal, Ember).
+* Customization: accent color override, corner radius, spacing density, card style, and optional custom CSS.
+* Theme tokens drive heroes, sidebars, and accents across auction pages, live rooms, and dashboards.
+
 = 1.1.0 =
-* Frontend edit listing flow with REST PUT/PATCH updates for drafts and scheduled lots.
-* Single auction gallery lightbox, Details/Share tabs, QR share codes, and edit listing action.
-* SEO-friendlier auction permalinks (`/auctions/…`); flush rewrite rules after upgrade.
-* Dashboard polish, Yoast/SEO compatibility registration, and holder listing edit links.
+Release date: 2026-09-08
+
+* Frontend edit listing flow with REST PUT/PATCH for draft, rejected, pending review, and scheduled auctions.
+* Single auction page: gallery lightbox, Details/Share tabs (no verification UI), QR codes, edit listing button, formatted HTML content, fulfilment notes.
+* Account edit view with prefilled submit form; listings Edit links use the seller dashboard (no wp-admin edit_post requirement).
+* SeoCompat registered at runtime for Yoast-friendly auction singles.
+* QR code script (wcap-qrcode) enqueued with frontend assets; copy/copied i18n strings.
+* Product sync on draft update uses ProductSync::create_or_update_product and sync_images.
+* CPT rewrite slug changed from `auction` to `auctions` (rewrite flush on upgrade).
+* Dashboard CSS spacing and softer indigo-themed shadows.
+* AuctionInputSanitizer: allowlisted fields, script-safe HTML (wp_kses_post + extra strip), fixed enums/ints/money decimals on create/update and admin editor.
+* Classic Editor for auction CPT in wp-admin; frontend create keeps textareas; dedicated seller edit page uses Classic Editor like admin.
+* Frontend edit listing layout fixed (no lead-form grid crush); wp-admin auction editor restored with product, gallery, and full settings meta boxes.
+* Icon + text admin actions with shared reason/confirm popup (Auctions, Holders, Bids).
+* Admin review/rating popup every 2 weeks (snooze or mark already reviewed); review link uses the standard reviews page (no 5-star filter).
+* Auction Categories admin menu; assignable on auction edit screen and seller submit/edit listing forms (always-visible Category field).
+* Admin auction gallery thumbnails layout fixed (grid + remove control; styles inlined on CPT editor).
+* Holders can assign auction categories (`assign_terms` → edit_own_auctions); default General category seeded when empty.
+* Custom auction + category permalink bases under Settings → Permalinks.
 
 = 1.0.0 =
+Release date: 2026-08-01
+
 * First public release on WordPress.org.
 * Timed and live auctions with server-authoritative bidding.
 * Soft close, awards, payment deadlines, and WooCommerce winner checkout.
@@ -318,8 +349,11 @@ Yes: wp logicanvas-auctions list, close, overdue, rebuild, schema, diagnostics, 
 
 == Upgrade Notice ==
 
+= 1.2.0 =
+Clearer setup, soft defaults (login/shop stay available unless you opt in), and multi-design appearance themes under Auctions → Settings. Existing sites that already used the plugin login page keep that behavior.
+
 = 1.1.0 =
-Adds frontend listing edits, share/QR tools, and `/auctions/` permalinks. Visit any admin page once after upgrade so rewrite rules flush, or go to Settings → Permalinks and click Save.
+Adds seller edit listings, categories, admin action UI, review prompt, gallery fixes, and customizable auction/category permalinks. After upgrade, visit Settings → Permalinks and click Save (or load any admin page once) so rewrite rules flush.
 
 = 1.0.0 =
 Initial public release. After activation, open Auctions → Setup to create frontend pages, then configure Auctions → Settings.

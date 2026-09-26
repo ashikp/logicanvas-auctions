@@ -11,7 +11,7 @@
 | | |
 | --- | --- |
 | **Plugin slug** | `logicanvas-auctions` |
-| **Version** | 1.1.0 |
+| **Version** | 1.2.0 |
 | **Author** | [Logicanvas.io](https://logicanvas.io) |
 | **Plugin URI** | https://wordpress.org/plugins/logicanvas-auctions/ |
 | **Documentation** | https://docs.logicanvas.io/logicanvas-auctions |
@@ -62,15 +62,15 @@ This is the **public WordPress.org edition**. It uses a generic frontend and adm
 
 The plugin never stores card numbers and never bypasses your configured WooCommerce payment gateways.
 
-### Important warning after install
+### Getting started
 
-After activation and **Auctions → Setup** (frontend pages):
+1. Activate the plugin (you land on **Auctions → Setup**).
+2. Click **Create pages & continue**. That adds ordinary WordPress pages for the catalog, dashboards, login, and winner payment.
+3. Add your first auction from **Auctions → Add Auction**.
 
-- WordPress **login** and **register** (`wp-login.php`) are redirected to the plugin login / register page.
-- The WooCommerce **shop** page is **hidden** by default.
-- WooCommerce **single product** pages are **hidden** by default.
+**Safe by default:** WordPress login and your WooCommerce shop stay unchanged. Optional modes (replace `wp-login.php`, hide the shop catalog, redirect sellers/bidders after login, block wp-admin for those roles) are off unless you turn them on in Setup or Settings. Escape hatch when login replace is on: `wp-login.php?wcap_core=1`.
 
-Cart, checkout, and My Account remain available for winner payment. Turn off **Disable WooCommerce shop and single product pages** under **Auctions → Settings** if you want the normal WooCommerce catalog.
+**Appearance:** Auctions → Settings → Appearance — six design themes plus accent color, radius, density, card style, and optional custom CSS.
 
 ---
 
@@ -632,6 +632,14 @@ When requesting help, include WordPress, WooCommerce, PHP versions, and relevant
 ---
 
 ## Changelog
+
+### 1.2.0
+
+- Clearer first run: activation opens Setup; dashboard checklist until pages and a first lot exist
+- Soft defaults: login and shop stay available unless you opt in
+- Existing sites with a plugin login page keep replace-login via a one-time migration
+- Friendlier docs, FAQ, and onboarding notice
+- Six frontend design themes plus accent, radius, density, card style, and custom CSS under **Auctions → Settings → Appearance**
 
 ### 1.1.0
 

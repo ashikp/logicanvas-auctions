@@ -45,9 +45,9 @@ final class TemplateLoader {
 		}
 
 		$wcap = $args;
-		echo '<div class="wcap-root">';
+		Design::open_root();
 		include $path;
-		echo '</div>';
+		Design::close_root();
 	}
 
 	/**

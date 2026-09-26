@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace LogicanvasAuctions\Admin;
 
 use LogicanvasAuctions\Config;
+use LogicanvasAuctions\Frontend\Design;
 
 final class Settings {
 
@@ -66,6 +67,7 @@ final class Settings {
 			'allow_coupons_on_auction'  => $this->to_bool( $merged['allow_coupons_on_auction'] ),
 			'allow_mixed_cart'          => $this->to_bool( $merged['allow_mixed_cart'] ),
 			'disable_wc_catalog'        => $this->to_bool( $merged['disable_wc_catalog'] ),
+			'replace_wp_login'          => $this->to_bool( $merged['replace_wp_login'] ?? false ),
 			'restrict_wp_admin'         => $this->to_bool( $merged['restrict_wp_admin'] ),
 			'login_redirect_dashboard'  => $this->to_bool( $merged['login_redirect_dashboard'] ),
 			'public_bid_history'        => $this->to_bool( $merged['public_bid_history'] ),
@@ -103,6 +105,24 @@ final class Settings {
 				array( 'admin', 'seller', 'both' ),
 				'both'
 			),
+			'design_theme'              => Design::sanitize_theme( (string) ( $merged['design_theme'] ?? Design::THEME_CLASSIC ) ),
+			'design_accent'             => Design::sanitize_hex( (string) ( $merged['design_accent'] ?? '' ) ),
+			'design_radius'             => $this->sanitize_enum(
+				(string) ( $merged['design_radius'] ?? 'medium' ),
+				array( 'soft', 'medium', 'sharp' ),
+				'medium'
+			),
+			'design_density'            => $this->sanitize_enum(
+				(string) ( $merged['design_density'] ?? 'comfortable' ),
+				array( 'comfortable', 'compact' ),
+				'comfortable'
+			),
+			'design_card_style'         => $this->sanitize_enum(
+				(string) ( $merged['design_card_style'] ?? 'elevated' ),
+				array( 'elevated', 'flat', 'outlined' ),
+				'elevated'
+			),
+			'design_custom_css'         => Design::sanitize_custom_css( (string) ( $merged['design_custom_css'] ?? '' ) ),
 		);
 
 		if ( '' === $out['terms_version'] ) {

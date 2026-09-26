@@ -16,6 +16,11 @@
 	--wcap-danger:#dc2626;
 	--wcap-radius:16px;
 	--wcap-shadow:0 10px 30px rgba(15,23,42,.07);
+	--wcap-hero-from:#0f172a;
+	--wcap-hero-mid:#1e1b4b;
+	--wcap-hero-to:#312e81;
+	--wcap-side:#0f172a;
+	--wcap-hero-em:#a5b4fc;
 	--red:var(--wcap-accent);
 	--ink:var(--wcap-ink);
 	--muted:var(--wcap-muted);
@@ -120,15 +125,15 @@
 .wcap-market{background:transparent;color:var(--wcap-ink)}
 .wcap-page-hero{
 	padding:clamp(2rem,4vw,3.5rem) 20px;
-	background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 60%,#312e81 100%);
+	background:linear-gradient(135deg,var(--wcap-hero-from) 0%,var(--wcap-hero-mid) 60%,var(--wcap-hero-to) 100%);
 	color:#fff;
-	border-radius:24px;
+	border-radius:var(--wcap-radius);
 	margin-bottom:1.5rem;
 }
-.wcap-page-hero.seller-hero{background:linear-gradient(135deg,#0f172a,#1e3a5f)}
+.wcap-page-hero.seller-hero{background:linear-gradient(135deg,var(--wcap-hero-from),var(--wcap-side))}
 .wcap-page-hero .wcap-hero-inner{max-width:1120px;margin:0 auto}
 .wcap-page-hero h1{color:#fff;font-size:clamp(1.8rem,1.2rem + 2vw,2.8rem)}
-.wcap-page-hero h1 em{font-style:normal;color:#a5b4fc}
+.wcap-page-hero h1 em{font-style:normal;color:var(--wcap-hero-em)}
 .wcap-page-hero p:not(.eyebrow){max-width:640px;color:#cbd5e1;font-size:1.05rem;margin:12px 0 20px}
 .wcap-hero-actions{display:flex;flex-wrap:wrap;gap:12px}
 .wcap-online-pill{
@@ -157,7 +162,7 @@
 	background:#fff;border:1px solid var(--wcap-line);border-radius:var(--wcap-radius);
 	overflow:hidden;box-shadow:var(--wcap-shadow)
 }
-.wcap-event-pic{min-height:120px;background:#0f172a}
+.wcap-event-pic{min-height:120px;background:var(--wcap-side)}
 .wcap-event-pic img{width:100%;height:100%;object-fit:cover;border-radius:0}
 .wcap-event-info{padding:20px;min-width:0}
 .wcap-status{display:inline-flex;align-items:center;gap:6px;font-size:.75rem;font-weight:600;color:var(--wcap-ok)}
@@ -216,7 +221,7 @@
 	background:#fff;border:1px solid var(--wcap-line);border-radius:24px;
 	overflow:hidden;box-shadow:var(--wcap-shadow);min-height:640px
 }
-.dashboard-side{background:#0f172a;color:#e2e8f0;padding:24px 18px;display:flex;flex-direction:column;gap:18px}
+.dashboard-side{background:var(--wcap-side);color:#e2e8f0;padding:24px 18px;display:flex;flex-direction:column;gap:18px}
 .dashboard-brand{margin:0;font-weight:700;font-size:1rem;color:#fff}
 .dashboard-brand small{display:block;color:#94a3b8;font-weight:500;font-size:.72rem;letter-spacing:.08em;margin-top:4px;text-transform:uppercase}
 .account-person{display:flex;gap:12px;align-items:center;padding:12px;border-radius:14px;background:rgba(255,255,255,.06)}
@@ -610,7 +615,7 @@ body.woocommerce-account.wcap-wc-account .wcap-btn--secondary{
 .wcap-wc-intro{
 	display:flex;flex-wrap:wrap;justify-content:space-between;gap:1rem;align-items:flex-end;
 	margin:0 0 1.35rem;padding:1.25rem;border-radius:18px;
-	background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 55%,#312e81 100%);color:#fff
+	background:linear-gradient(135deg,var(--wcap-hero-from) 0%,var(--wcap-hero-mid) 55%,var(--wcap-hero-to) 100%);color:#fff
 }
 .wcap-wc-intro__kicker{margin:0 0 .35rem;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#c7d2fe}
 .wcap-wc-intro h2{margin:0;color:#fff;font-size:clamp(1.2rem,1rem + 1vw,1.45rem)}

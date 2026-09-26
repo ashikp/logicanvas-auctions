@@ -81,7 +81,7 @@
         },
         {
           "slug": "wcap-setup",
-          "title": "Setup Wizard"
+          "title": "Setup"
         }
       ]
     }
@@ -493,7 +493,7 @@
         "admin"
       ],
       "question": "Where do I manage auctions in wp-admin?",
-      "answer": "Under the Auctions menu (wcap-dashboard): Dashboard, Add Auction, All Auctions, Holders, Bids, Awards, Settlements, Settings, Diagnostics, and Setup Wizard. Exact items depend on capabilities.",
+      "answer": "Under the Auctions menu (wcap-dashboard): Dashboard, Add Auction, All Auctions, Holders, Bids, Awards, Settlements, Settings, Diagnostics, and Setup. Exact items depend on capabilities.",
       "tags": [
         "admin"
       ]
@@ -507,7 +507,7 @@
         "admin"
       ],
       "question": "Is there a dedicated login page?",
-      "answer": "Yes. Setup creates a Log in page with [wcap_login] for login, register, lost password, and reset flows. Settings can redirect users to holder/bidder dashboards after login and optionally restrict wp-admin for those roles.",
+      "answer": "Yes. Setup creates a Log in page with [wcap_login] for login, register, lost password, and reset flows. Replacing wp-login.php, redirecting sellers/bidders after login, and blocking wp-admin for those roles are optional settings (off by default).",
       "tags": [
         "login",
         "accounts"
@@ -786,6 +786,16 @@
         "proxy_bidding_enabled": false,
         "allow_coupons_on_auction": false,
         "allow_mixed_cart": false,
+        "disable_wc_catalog": false,
+        "replace_wp_login": false,
+        "restrict_wp_admin": false,
+        "login_redirect_dashboard": false,
+        "design_theme": "classic",
+        "design_accent": "",
+        "design_radius": "medium",
+        "design_density": "comfortable",
+        "design_card_style": "elevated",
+        "design_custom_css": "",
         "commission_fixed": "0.00",
         "commission_percent": "10.00",
         "commission_minimum": "0.00",

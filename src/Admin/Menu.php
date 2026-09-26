@@ -27,6 +27,7 @@ final class Menu {
 		add_action( 'admin_menu', array( $this, 'menus' ), 9 );
 		add_action( 'admin_menu', array( $this, 'ensure_dashboard_submenu' ), 999 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
+		add_action( 'admin_init', array( $this, 'maybe_activation_redirect' ) );
 		add_action( 'admin_post_wcap_admin_action', array( $this, 'handle_action' ) );
 		add_action( 'admin_post_wcap_view_payout_proof', array( $this, 'view_payout_proof' ) );
 		add_action( 'admin_notices', array( $this, 'render_notices' ) );
@@ -35,6 +36,24 @@ final class Menu {
 		add_filter( 'submenu_file', array( $this, 'fix_category_submenu' ) );
 		add_filter( 'plugin_action_links_' . plugin_basename( Config::plugin_file() ), array( $this, 'plugin_action_links' ) );
 		add_filter( 'plugin_row_meta', array( $this, 'plugin_row_meta' ), 10, 2 );
+	}
+
+	/**
+	 * After activate, land on Setup so the first screen is not an empty dashboard.
+	 */
+	public function maybe_activation_redirect(): void {
+		if ( get_option( 'wcap_do_activation_redirect', '' ) !== '1' ) {
+			return;
+		}
+		delete_option( 'wcap_do_activation_redirect' );
+		if ( wp_doing_ajax() || ( defined( 'WP_CLI' ) && WP_CLI ) ) {
+			return;
+		}
+		if ( ! current_user_can( Config::CAP_MANAGE_SETTINGS ) ) {
+			return;
+		}
+		wp_safe_redirect( admin_url( 'admin.php?page=wcap-setup' ) );
+		exit;
 	}
 
 	/**
@@ -87,8 +106,18 @@ final class Menu {
 	 * @return string[]
 	 */
 	public function plugin_action_links( array $links ): array {
-		$links[] = '<a href="' . esc_url( admin_url( 'admin.php?page=wcap-dashboard' ) ) . '">' . esc_html__( 'Dashboard', 'logicanvas-auctions' ) . '</a>';
-		$links[] = '<a href="' . esc_url( Config::DOCS_URI ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Docs', 'logicanvas-auctions' ) . '</a>';
+		$pages = get_option( Config::OPTION_PAGES, array() );
+		$ready = is_array( $pages ) && ! empty( $pages['archive'] );
+
+		$setup = '<a href="' . esc_url( admin_url( 'admin.php?page=wcap-setup' ) ) . '"><strong>' . esc_html__( 'Setup', 'logicanvas-auctions' ) . '</strong></a>';
+		$dash  = '<a href="' . esc_url( admin_url( 'admin.php?page=wcap-dashboard' ) ) . '">' . esc_html__( 'Dashboard', 'logicanvas-auctions' ) . '</a>';
+		$docs  = '<a href="' . esc_url( Config::DOCS_URI ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Docs', 'logicanvas-auctions' ) . '</a>';
+
+		array_unshift( $links, $ready ? $dash : $setup );
+		if ( $ready ) {
+			$links[] = '<a href="' . esc_url( admin_url( 'admin.php?page=wcap-setup' ) ) . '">' . esc_html__( 'Setup', 'logicanvas-auctions' ) . '</a>';
+		}
+		$links[] = $docs;
 		return $links;
 	}
 
@@ -154,7 +183,7 @@ final class Menu {
 		add_submenu_page( 'wcap-dashboard', __( 'Settlements', 'logicanvas-auctions' ), __( 'Settlements', 'logicanvas-auctions' ), Config::CAP_MANAGE_SETTLEMENTS, 'wcap-settlements', array( new SettlementsPage(), 'render' ) );
 		add_submenu_page( 'wcap-dashboard', __( 'Settings', 'logicanvas-auctions' ), __( 'Settings', 'logicanvas-auctions' ), Config::CAP_MANAGE_SETTINGS, 'wcap-settings', array( new SettingsPage(), 'render' ) );
 		add_submenu_page( 'wcap-dashboard', __( 'Diagnostics', 'logicanvas-auctions' ), __( 'Diagnostics', 'logicanvas-auctions' ), Config::CAP_MANAGE_SETTINGS, 'wcap-diagnostics', array( new DiagnosticsPage(), 'render' ) );
-		add_submenu_page( 'wcap-dashboard', __( 'Setup', 'logicanvas-auctions' ), __( 'Setup Wizard', 'logicanvas-auctions' ), Config::CAP_MANAGE_SETTINGS, 'wcap-setup', array( new SetupWizard(), 'render' ) );
+		add_submenu_page( 'wcap-dashboard', __( 'Setup', 'logicanvas-auctions' ), __( 'Setup', 'logicanvas-auctions' ), Config::CAP_MANAGE_SETTINGS, 'wcap-setup', array( new SetupWizard(), 'render' ) );
 	}
 
 	/**

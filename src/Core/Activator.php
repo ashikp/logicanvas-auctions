@@ -47,5 +47,6 @@ final class Activator {
 
 		update_option( Config::OPTION_DB_VER, Config::DB_VERSION, true );
 		update_option( 'wcap_flush_wc_endpoints', '1', false );
+		update_option( 'wcap_do_activation_redirect', '1', false );
 	}
 }

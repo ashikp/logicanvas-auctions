@@ -74,10 +74,11 @@ final class Notices {
 
 		$url      = admin_url( 'admin.php?page=wcap-setup' );
 		$dismiss  = wp_nonce_url( admin_url( 'admin-post.php?action=wcap_dismiss_onboarding' ), 'wcap_dismiss_onboarding' );
-		echo '<div class="notice notice-info is-dismissible"><p>';
-		echo esc_html__( 'Logicanvas Auctions for WooCommerce is active. Open Auctions → Setup to create auction pages.', 'logicanvas-auctions' );
-		echo ' <a href="' . esc_url( $url ) . '">' . esc_html__( 'Open setup wizard', 'logicanvas-auctions' ) . '</a>';
-		echo ' | <a href="' . esc_url( $dismiss ) . '">' . esc_html__( 'Dismiss', 'logicanvas-auctions' ) . '</a>';
+		echo '<div class="notice notice-info"><p>';
+		echo '<strong>' . esc_html__( 'Welcome to Logicanvas Auctions.', 'logicanvas-auctions' ) . '</strong> ';
+		echo esc_html__( 'Run Setup once to create your auction pages. Your WordPress login and WooCommerce shop stay as they are unless you opt into those modes.', 'logicanvas-auctions' );
+		echo ' <a class="button button-primary" style="margin-left:8px" href="' . esc_url( $url ) . '">' . esc_html__( 'Open setup', 'logicanvas-auctions' ) . '</a>';
+		echo ' <a href="' . esc_url( $dismiss ) . '">' . esc_html__( 'Dismiss', 'logicanvas-auctions' ) . '</a>';
 		echo '</p></div>';
 	}
 

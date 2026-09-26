@@ -32,7 +32,6 @@ final class AuthPages {
 	public function register(): void {
 		add_shortcode( 'wcap_login', array( $this, 'shortcode' ) );
 		add_shortcode( 'wcap_register', array( $this, 'shortcode_register' ) );
-		add_action( 'init', array( $this, 'maybe_ensure_page' ), 20 );
 		add_action( 'login_init', array( $this, 'redirect_core_login' ), 1 );
 		add_action( 'template_redirect', array( $this, 'handle_request' ), 8 );
 		add_filter( 'login_url', array( $this, 'filter_login_url' ), 10, 3 );
@@ -79,6 +78,10 @@ final class AuthPages {
 		return $this->shortcode( $atts );
 	}
 
+	/**
+	 * Optional: create the login page only when Setup (or an admin) requests it.
+	 * Kept public for SetupWizard / manual recovery — no longer runs on every init.
+	 */
 	public function maybe_ensure_page(): void {
 		if ( wp_doing_ajax() || wp_doing_cron() || ( defined( 'WP_CLI' ) && WP_CLI ) ) {
 			return;
@@ -102,7 +105,6 @@ final class AuthPages {
 			return;
 		}
 
-		// Atomic claim so concurrent requests do not create duplicate login pages.
 		if ( ! \LogicanvasAuctions\Infrastructure\Database\OptionLock::acquire( 'creating_login_page', MINUTE_IN_SECONDS ) ) {
 			return;
 		}
@@ -140,15 +142,25 @@ final class AuthPages {
 	}
 
 	public function redirect_core_login(): void {
-		if ( ! empty( $_GET['wcap_core'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( empty( \LogicanvasAuctions\Admin\Settings::get()['replace_wp_login'] ) ) {
 			return;
 		}
 
-		if ( isset( $_GET['interim-login'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$wcap_core = filter_input( INPUT_GET, 'wcap_core', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+		if ( is_string( $wcap_core ) && '' !== $wcap_core ) {
 			return;
 		}
 
-		$action = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( (string) $_REQUEST['action'] ) ) : self::VIEW_LOGIN; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( null !== filter_input( INPUT_GET, 'interim-login' ) ) {
+			return;
+		}
+
+		$raw_action = filter_input( INPUT_GET, 'action', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+		if ( ! is_string( $raw_action ) || '' === $raw_action ) {
+			$post_action = filter_input( INPUT_POST, 'action', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+			$raw_action  = is_string( $post_action ) ? $post_action : '';
+		}
+		$action = '' !== $raw_action ? sanitize_key( $raw_action ) : self::VIEW_LOGIN;
 		if ( '' === $action ) {
 			$action = self::VIEW_LOGIN;
 		}

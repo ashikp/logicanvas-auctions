@@ -11,8 +11,11 @@ namespace LogicanvasAuctions\Frontend;
 
 use LogicanvasAuctions\Admin\Settings;
 use LogicanvasAuctions\Config;
+use LogicanvasAuctions\Frontend\Design;
 
 final class Assets {
+
+	private static bool $design_css_applied = false;
 
 	public function register(): void {
 		add_action( 'wp_enqueue_scripts', array( $this, 'maybe_enqueue' ) );
@@ -86,9 +89,31 @@ final class Assets {
 			wp_enqueue_style( 'wcap-frontend' );
 		}
 
+		self::apply_design_styles();
+
 		if ( ! wp_script_is( 'wcap-frontend', 'enqueued' ) && ! wp_script_is( 'wcap-frontend', 'done' ) ) {
 			self::enqueue_script();
 		}
+	}
+
+	/**
+	 * Theme tokens + optional custom CSS after the main stylesheet.
+	 */
+	private static function apply_design_styles(): void {
+		if ( self::$design_css_applied ) {
+			return;
+		}
+		if ( ! wp_style_is( 'wcap-frontend', 'registered' ) && ! wp_style_is( 'wcap-frontend', 'enqueued' ) ) {
+			return;
+		}
+
+		$css = Design::inline_css();
+		if ( '' === $css ) {
+			return;
+		}
+
+		wp_add_inline_style( 'wcap-frontend', $css );
+		self::$design_css_applied = true;
 	}
 
 	/**

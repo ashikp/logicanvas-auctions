@@ -191,7 +191,7 @@ final class Shortcodes {
 				? $e->getMessage() . ' (' . basename( $e->getFile() ) . ':' . $e->getLine() . ')'
 				: __( 'This page could not be loaded. Please try again or contact the site administrator.', 'logicanvas-auctions' );
 
-			return '<div class="wcap-root wcap-login-gate"><p>' . esc_html( $detail ) . '</p></div>';
+			return '<div class="' . esc_attr( Design::root_classes( 'wcap-login-gate' ) ) . '"><p>' . esc_html( $detail ) . '</p></div>';
 		}
 	}
 

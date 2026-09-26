@@ -1,5 +1,17 @@
 === Logicanvas Auctions for WooCommerce — Changelog ===
 
+= 1.2.0 =
+Release date: 2026-09-27
+
+* Clearer first run: activation opens Auctions → Setup; dashboard checklist until pages and a first lot exist.
+* Soft defaults: WordPress login and WooCommerce shop stay available unless you opt in (replace_wp_login, disable_wc_catalog, login redirects, wp-admin restrict).
+* Setup explains optional store modes; Settings copy matches. Existing sites with a plugin login page keep replace_wp_login via a one-time migration.
+* Plugin list “Setup” action link; friendlier dismissible onboarding notice.
+* Docs and FAQ updated so install no longer sounds like it takes over login/shop.
+* Appearance settings: six design themes (Classic, Midnight, Auction house, Ocean, Minimal, Ember).
+* Customization: accent color override, corner radius, spacing density, card style, and optional custom CSS.
+* Theme tokens drive heroes, sidebars, and accents across auction pages, live rooms, and dashboards.
+
 = 1.1.0 =
 Release date: 2026-09-08
 

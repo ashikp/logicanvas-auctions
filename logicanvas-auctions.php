@@ -2,8 +2,8 @@
 /**
  * Plugin Name: Logicanvas Auctions for WooCommerce
  * Plugin URI: https://wordpress.org/plugins/logicanvas-auctions/
- * Description: Timed and live auctions for WooCommerce, with server-side bidding, winner checkout, and optional Elementor widgets.
- * Version: 1.1.0
+ * Description: Timed and live auctions for WooCommerce. Clear setup, server-side bidding, and winner checkout through your store.
+ * Version: 1.2.0
  * Requires at least: 6.4
  * Requires PHP: 8.1
  * Requires Plugins: woocommerce

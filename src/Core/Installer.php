@@ -22,8 +22,29 @@ final class Installer {
 			update_option( Config::OPTION_SETTINGS, Settings::with_defaults( array() ), true );
 		}
 
+		$this->maybe_migrate_clarity_120();
+
 		add_filter( 'cron_schedules', array( $this, 'cron_schedules' ) );
 		add_action( 'init', array( $this, 'schedule_cron' ), 5 );
+	}
+
+	/**
+	 * Preserve login redirect for sites that already had a plugin login page before 1.2.0.
+	 */
+	private function maybe_migrate_clarity_120(): void {
+		if ( get_option( 'wcap_clarity_migrated_120', '' ) === '1' ) {
+			return;
+		}
+
+		$pages    = get_option( Config::OPTION_PAGES, array() );
+		$settings = Settings::get();
+
+		if ( is_array( $pages ) && ! empty( $pages['login'] ) && empty( $settings['replace_wp_login'] ) ) {
+			$settings['replace_wp_login'] = true;
+			update_option( Config::OPTION_SETTINGS, $settings, true );
+		}
+
+		update_option( 'wcap_clarity_migrated_120', '1', false );
 	}
 
 	/**

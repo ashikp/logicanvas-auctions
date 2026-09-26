@@ -78,6 +78,65 @@
 	padding:20px;
 	box-shadow:0 8px 24px rgba(15,23,42,.04);
 }
+.wcap-admin__panel-title{margin:0 0 12px;font-size:1.1rem}
+.wcap-setup-steps{margin:0;padding-left:1.25rem;line-height:1.55;color:#334155}
+.wcap-setup-steps li{margin:0 0 10px}
+.wcap-setup-options{margin:12px 0 20px;padding:14px 16px;border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc}
+.wcap-setup-options legend{padding:0 .35rem;font-weight:700}
+.wcap-setup-check{margin:0 0 12px}
+.wcap-setup-check .description{display:block;margin:.35rem 0 0 1.5rem;color:#64748b}
+.wcap-dashboard-checklist li{margin:0 0 16px;padding-bottom:12px;border-bottom:1px solid #e2e8f0}
+.wcap-dashboard-checklist li:last-child{border-bottom:0;margin-bottom:0;padding-bottom:0}
+.wcap-dashboard-checklist .is-done strong{color:#047857}
+.wcap-pill{display:inline-flex;align-items:center;margin-left:8px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.02em;text-transform:uppercase}
+.wcap-pill--ok{background:#ecfdf5;color:#047857}
+.wcap-theme-picker{
+	display:grid;
+	grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+	gap:12px;
+	margin:12px 0 8px;
+}
+.wcap-theme-card{
+	display:flex;
+	flex-direction:column;
+	gap:10px;
+	margin:0;
+	padding:12px;
+	border:1px solid #e2e8f0;
+	border-radius:14px;
+	background:#fff;
+	cursor:pointer;
+	transition:border-color .15s ease,box-shadow .15s ease;
+}
+.wcap-theme-card:hover{border-color:#a5b4fc}
+.wcap-theme-card.is-selected,
+.wcap-theme-card:has(input:checked){
+	border-color:#4f46e5;
+	box-shadow:0 0 0 2px rgba(79,70,229,.18);
+}
+.wcap-theme-card input{position:absolute;opacity:0;pointer-events:none}
+.wcap-theme-card__swatch{
+	display:block;
+	height:64px;
+	border-radius:10px;
+	background:
+		linear-gradient(135deg,var(--swatch-from) 0%,var(--swatch-to) 55%),
+		var(--swatch-bg);
+	position:relative;
+	overflow:hidden;
+}
+.wcap-theme-card__swatch::after{
+	content:"";
+	position:absolute;
+	right:10px;bottom:10px;
+	width:36px;height:22px;
+	border-radius:999px;
+	background:var(--swatch-accent);
+	box-shadow:0 0 0 3px var(--swatch-card);
+}
+.wcap-theme-card__body{display:flex;flex-direction:column;gap:4px}
+.wcap-theme-card__body strong{color:#0f172a}
+.wcap-theme-card__body .description{margin:0;color:#64748b}
 .wcap-admin__stats{
 	display:grid;
 	grid-template-columns:repeat(auto-fit,minmax(180px,1fr));

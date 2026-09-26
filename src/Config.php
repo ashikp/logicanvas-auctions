@@ -18,7 +18,7 @@ final class Config {
 	public const DOCS_URI        = 'https://docs.logicanvas.io/logicanvas-auctions';
 	public const REVIEW_URI      = 'https://wordpress.org/support/plugin/logicanvas-auctions/reviews/#new-post';
 	public const SLUG            = 'logicanvas-auctions';
-	public const VERSION         = '1.1.0';
+	public const VERSION         = '1.2.0';
 	public const DB_VERSION      = '1.0.2';
 	public const TEXT_DOMAIN     = 'logicanvas-auctions';
 	public const REST_NAMESPACE  = 'logicanvas-auctions/v1';
@@ -92,8 +92,9 @@ final class Config {
 			'allow_coupons_on_auction'   => false,
 			'allow_mixed_cart'           => false,
 			'disable_wc_catalog'         => false,
-			'restrict_wp_admin'          => true,
-			'login_redirect_dashboard'   => true,
+			'replace_wp_login'           => false,
+			'restrict_wp_admin'          => false,
+			'login_redirect_dashboard'   => false,
 			'public_bid_history'         => true,
 			'bid_rate_limit_user'        => 30,
 			'bid_rate_limit_auction'     => 120,
@@ -113,6 +114,12 @@ final class Config {
 			'require_terms'              => true,
 			'realtime_mode'              => 'polling',
 			'order_managed_by'           => 'both',
+			'design_theme'               => 'classic',
+			'design_accent'              => '',
+			'design_radius'              => 'medium',
+			'design_density'             => 'comfortable',
+			'design_card_style'          => 'elevated',
+			'design_custom_css'          => '',
 		);
 	}
 

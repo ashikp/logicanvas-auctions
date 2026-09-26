@@ -11,6 +11,7 @@ namespace LogicanvasAuctions\Elementor\Widgets;
 
 use LogicanvasAuctions\Elementor\Category;
 use LogicanvasAuctions\Frontend\Assets;
+use LogicanvasAuctions\Frontend\Design;
 use Elementor\Controls_Manager;
 use Elementor\Widget_Base;
 
@@ -91,7 +92,7 @@ abstract class ShortcodeWidget extends Widget_Base {
 
 	protected function render(): void {
 		if ( \Elementor\Plugin::$instance->editor->is_edit_mode() ) {
-			echo '<div class="wcap-root wcap-elementor-placeholder"><p class="wcap-badge">' . esc_html( $this->get_title() ) . '</p><p>' . esc_html__( 'Auction widget — layout renders on the live page.', 'logicanvas-auctions' ) . '</p></div>';
+			echo '<div class="' . esc_attr( Design::root_classes( 'wcap-elementor-placeholder' ) ) . '"><p class="wcap-badge">' . esc_html( $this->get_title() ) . '</p><p>' . esc_html__( 'Auction widget — layout renders on the live page.', 'logicanvas-auctions' ) . '</p></div>';
 			return;
 		}
 
@@ -119,14 +120,14 @@ abstract class ShortcodeWidget extends Widget_Base {
 		}
 
 		$att = $id ? ' id="' . $id . '"' : '';
-		echo '<div class="wcap-root">';
+		// Shortcodes already wrap with .wcap-root — do not nest another shell.
 		echo do_shortcode( '[' . $tag . $att . ']' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-		echo '</div>';
 	}
 
 	protected function content_template(): void {
+		$classes = esc_attr( Design::root_classes( 'wcap-elementor-placeholder' ) );
 		?>
-		<div class="wcap-root wcap-elementor-placeholder">
+		<div class="<?php echo $classes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped above. ?>">
 			<p class="wcap-badge"><?php echo esc_html( $this->widget_title() ); ?></p>
 			<p><?php esc_html_e( 'Auction widget — layout renders on the live page.', 'logicanvas-auctions' ); ?></p>
 		</div>

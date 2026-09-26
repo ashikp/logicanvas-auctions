@@ -45,9 +45,12 @@ final class Screen {
 		echo '</div></div>';
 	}
 
-	public static function panel_open( string $class = '' ): void {
+	public static function panel_open( string $class = '', string $heading = '' ): void {
 		$class = trim( 'wcap-admin__panel ' . $class );
 		echo '<div class="' . esc_attr( $class ) . '">';
+		if ( '' !== $heading ) {
+			echo '<h2 class="wcap-admin__panel-title">' . esc_html( $heading ) . '</h2>';
+		}
 	}
 
 	public static function panel_close(): void {
