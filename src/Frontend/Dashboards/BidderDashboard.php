@@ -32,8 +32,9 @@ final class BidderDashboard {
 			QueryCache::key( 'bidder_leading', $user_id ),
 			45,
 			static function () use ( $wpdb, $state_t, $user_id ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_results(
+				$cache_key = 'wcap_db_local';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
+				$_result = $wpdb->get_results(
 					$wpdb->prepare(
 						'SELECT auction_id, current_amount, currency, state, bid_count, end_at_utc FROM %i WHERE current_leader_id = %d ORDER BY updated_at_utc DESC LIMIT 20',
 						$state_t,
@@ -41,6 +42,8 @@ final class BidderDashboard {
 					),
 					ARRAY_A
 				);
+				wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+				return $_result;
 			}
 		);
 		if ( ! is_array( $leading_rows ) ) {
@@ -69,8 +72,9 @@ final class BidderDashboard {
 			QueryCache::key( 'bidder_awards', $user_id ),
 			45,
 			static function () use ( $wpdb, $award_t, $user_id ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_results(
+				$cache_key = 'wcap_db_local';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
+				$_result = $wpdb->get_results(
 					$wpdb->prepare(
 						'SELECT id, auction_id, amount, currency, status, payment_deadline_utc, order_id FROM %i WHERE winner_id = %d ORDER BY id DESC LIMIT 30',
 						$award_t,
@@ -78,6 +82,8 @@ final class BidderDashboard {
 					),
 					ARRAY_A
 				);
+				wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+				return $_result;
 			}
 		);
 		if ( ! is_array( $award_rows ) ) {
@@ -139,8 +145,9 @@ final class BidderDashboard {
 			QueryCache::key( 'bidder_bids', $user_id ),
 			45,
 			static function () use ( $wpdb, $bids_t, $state_t, $user_id ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_results(
+				$cache_key = 'wcap_db_local';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
+				$_result = $wpdb->get_results(
 					$wpdb->prepare(
 						'SELECT b.auction_id, b.amount, b.currency, b.created_at_utc, b.status, s.current_leader_id, s.current_amount, s.state, s.bid_count
 						FROM %i b
@@ -154,6 +161,8 @@ final class BidderDashboard {
 					),
 					ARRAY_A
 				);
+				wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+				return $_result;
 			}
 		);
 		if ( ! is_array( $rows ) ) {

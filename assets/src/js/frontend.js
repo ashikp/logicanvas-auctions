@@ -34,9 +34,15 @@
 
 	function request(path, options) {
 		options = options || {};
+		var hdrs = headers();
+		if (options.headers) {
+			Object.keys(options.headers).forEach(function (k) {
+				hdrs[k] = options.headers[k];
+			});
+		}
 		return fetch(cfg.restUrl + path, {
 			method: options.method || 'GET',
-			headers: headers(),
+			headers: hdrs,
 			credentials: 'same-origin',
 			body: options.body ? JSON.stringify(options.body) : undefined
 		}).then(function (res) {
@@ -933,6 +939,77 @@
 					} else {
 						window.alert(err.message);
 					}
+				});
+		});
+	});
+
+	document.querySelectorAll('[data-wcap-buy-now]').forEach(function (btn) {
+		btn.addEventListener('click', function () {
+			var id = btn.getAttribute('data-id');
+			if (!id) {
+				return;
+			}
+			var confirmMsg = (cfg.i18n && cfg.i18n.buyNowConfirm) || 'Buy now at this fixed price?';
+			if (!window.confirm(confirmMsg)) {
+				return;
+			}
+			btn.disabled = true;
+			var form = btn.closest('form') || btn.parentElement;
+			var status = form && form.querySelector('.wcap-form-status');
+			if (status) {
+				status.textContent = '…';
+			}
+			var key = 'buy-now-' + id + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10);
+			request('auctions/' + id + '/buy-now', {
+				method: 'POST',
+				body: { idempotency_key: key },
+				headers: { 'X-Idempotency-Key': key }
+			})
+				.then(function (res) {
+					if (status) {
+						status.textContent = (cfg.i18n && cfg.i18n.buyNowOk) || 'Purchase complete.';
+					}
+					var pay = res && res.auction && res.auction.award && res.auction.award.pay_url;
+					if (pay) {
+						window.location.href = pay;
+						return;
+					}
+					window.location.reload();
+				})
+				.catch(function (err) {
+					btn.disabled = false;
+					if (status) {
+						status.textContent = err.message;
+					} else {
+						window.alert(err.message);
+					}
+				});
+		});
+	});
+
+	document.querySelectorAll('[data-wcap-relist]').forEach(function (btn) {
+		btn.addEventListener('click', function () {
+			var id = btn.getAttribute('data-id');
+			if (!id) {
+				return;
+			}
+			var confirmMsg = (cfg.i18n && cfg.i18n.relistConfirm) || 'Create a new draft copy of this auction?';
+			if (!window.confirm(confirmMsg)) {
+				return;
+			}
+			btn.disabled = true;
+			request('auctions/' + id + '/relist', { method: 'POST', body: {} })
+				.then(function (res) {
+					var url = (res && (res.edit_url || res.admin_url)) || '';
+					if (url) {
+						window.location.href = url;
+						return;
+					}
+					window.location.reload();
+				})
+				.catch(function (err) {
+					btn.disabled = false;
+					window.alert(err.message);
 				});
 		});
 	});

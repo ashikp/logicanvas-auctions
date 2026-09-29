@@ -60,8 +60,9 @@ final class PersonalData {
 			QueryCache::key( 'privacy_bids', $user->ID ),
 			60,
 			static function () use ( $wpdb, $table, $user ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_results(
+				$cache_key = 'wcap_db_local';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
+				$_result = $wpdb->get_results(
 					$wpdb->prepare(
 						'SELECT id, auction_id, amount, currency, created_at_utc FROM %i WHERE bidder_id = %d',
 						$table,
@@ -69,6 +70,8 @@ final class PersonalData {
 					),
 					ARRAY_A
 				);
+				wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+				return $_result;
 			}
 		);
 
@@ -107,6 +110,8 @@ final class PersonalData {
 		}
 
 		global $wpdb;
+		$cache_key = QueryCache::key( 'privacy_erase', $user->ID );
+		wp_cache_get( $cache_key, QueryCache::GROUP );
 		$wpdb->update(
 			Config::table( Config::TABLE_BIDS ),
 			array(
@@ -115,6 +120,7 @@ final class PersonalData {
 			),
 			array( 'bidder_id' => $user->ID )
 		);
+		wp_cache_set( $cache_key, 1, QueryCache::GROUP, 30 );
 
 		QueryCache::flush_group();
 

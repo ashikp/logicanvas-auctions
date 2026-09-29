@@ -12,6 +12,7 @@ namespace LogicanvasAuctions\Admin\Pages;
 use LogicanvasAuctions\Admin\Screen;
 use LogicanvasAuctions\Admin\Settings;
 use LogicanvasAuctions\Config;
+use LogicanvasAuctions\Frontend\PluginPages;
 
 final class SetupWizard {
 
@@ -32,8 +33,34 @@ final class SetupWizard {
 			echo '<div class="notice notice-success"><p>' . esc_html__( 'Setup complete. Your auction pages are ready — you can edit them under Pages anytime.', 'logicanvas-auctions' ) . '</p></div>';
 		}
 
+		if ( isset( $_POST['wcap_demo_create'] ) ) {
+			check_admin_referer( 'wcap_demo_auction' );
+			$result = \LogicanvasAuctions\Domain\Auction\DemoAuction::create( get_current_user_id() );
+			if ( is_wp_error( $result ) ) {
+				echo '<div class="notice notice-error"><p>' . esc_html( $result->get_error_message() ) . '</p></div>';
+			} else {
+				$view = get_permalink( (int) $result );
+				echo '<div class="notice notice-success"><p>' . esc_html__( 'Demo auction created and published. Try bidding as another user, or open it below.', 'logicanvas-auctions' );
+				if ( $view ) {
+					echo ' <a href="' . esc_url( $view ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'View demo lot', 'logicanvas-auctions' ) . '</a>';
+				}
+				echo '</p></div>';
+			}
+		}
+
+		if ( isset( $_POST['wcap_demo_delete'] ) ) {
+			check_admin_referer( 'wcap_demo_auction' );
+			$result = \LogicanvasAuctions\Domain\Auction\DemoAuction::delete( get_current_user_id() );
+			if ( is_wp_error( $result ) ) {
+				echo '<div class="notice notice-error"><p>' . esc_html( $result->get_error_message() ) . '</p></div>';
+			} else {
+				echo '<div class="notice notice-success"><p>' . esc_html__( 'Demo auction moved to trash.', 'logicanvas-auctions' ) . '</p></div>';
+			}
+		}
+
 		$pages = get_option( Config::OPTION_PAGES, array() );
 		$ready = is_array( $pages ) && ! empty( $pages['archive'] );
+		$demo  = \LogicanvasAuctions\Domain\Auction\DemoAuction::exists();
 
 		Screen::open(
 			__( 'Setup', 'logicanvas-auctions' ),
@@ -92,6 +119,37 @@ final class SetupWizard {
 		echo '</p>';
 		echo '</form>';
 		Screen::panel_close();
+
+		if ( $ready || $done ) {
+			Screen::panel_open( '', __( 'Next steps', 'logicanvas-auctions' ) );
+			$archive = PluginPages::url( 'archive' );
+			echo '<ol class="wcap-setup-steps">';
+			if ( $archive ) {
+				echo '<li><a href="' . esc_url( $archive ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'View auction catalog', 'logicanvas-auctions' ) . '</a></li>';
+			}
+			echo '<li><a href="' . esc_url( admin_url( 'post-new.php?post_type=' . Config::CPT ) ) . '">' . esc_html__( 'Add a real auction', 'logicanvas-auctions' ) . '</a></li>';
+			echo '<li>' . esc_html__( 'Optional: create a demo lot below so you can try bidding immediately.', 'logicanvas-auctions' ) . '</li>';
+			echo '</ol>';
+
+			echo '<form method="post" class="wcap-demo-form">';
+			wp_nonce_field( 'wcap_demo_auction' );
+			if ( $demo ) {
+				$demo_id  = \LogicanvasAuctions\Domain\Auction\DemoAuction::current_id();
+				$demo_url = get_permalink( $demo_id );
+				echo '<p>' . esc_html__( 'A demo auction is ready.', 'logicanvas-auctions' );
+				if ( $demo_url ) {
+					echo ' <a href="' . esc_url( $demo_url ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Open it', 'logicanvas-auctions' ) . '</a>';
+				}
+				echo ' · <a href="' . esc_url( get_edit_post_link( $demo_id ) ?: '#' ) . '">' . esc_html__( 'Edit', 'logicanvas-auctions' ) . '</a>';
+				echo '</p>';
+				echo '<p><button class="button" name="wcap_demo_delete" value="1">' . esc_html__( 'Delete demo auction', 'logicanvas-auctions' ) . '</button></p>';
+			} else {
+				echo '<p class="description">' . esc_html__( 'Creates one public timed lot with Buy Now, starting now and ending in 24 hours. Marked as demo; safe to trash.', 'logicanvas-auctions' ) . '</p>';
+				echo '<p><button class="button button-primary" name="wcap_demo_create" value="1">' . esc_html__( 'Create demo auction', 'logicanvas-auctions' ) . '</button></p>';
+			}
+			echo '</form>';
+			Screen::panel_close();
+		}
 
 		if ( is_array( $pages ) && $pages ) {
 			Screen::panel_open( '', __( 'Assigned pages', 'logicanvas-auctions' ) );

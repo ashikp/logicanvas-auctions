@@ -155,6 +155,8 @@ final class CheckoutLock {
 			$url = wc_get_checkout_url();
 			$key = 'checkout-' . $award_id . '-' . $user_id;
 			global $wpdb;
+			$cache_key = QueryCache::key( 'checkout_idem', $award_id, $user_id );
+			wp_cache_get( $cache_key, QueryCache::GROUP );
 			$wpdb->replace(
 				Config::table( Config::TABLE_IDEMPOTENCY ),
 				array(
@@ -164,6 +166,7 @@ final class CheckoutLock {
 					'created_at_utc'  => gmdate( 'Y-m-d H:i:s' ),
 				)
 			);
+			wp_cache_set( $cache_key, 1, QueryCache::GROUP, 30 );
 
 			do_action( 'wcap_winner_checkout_initialized', $auction->id(), $award_id, $user_id );
 
@@ -514,6 +517,8 @@ final class CheckoutLock {
 		}
 
 		global $wpdb;
+		$cache_key = QueryCache::key( 'award_link_order', $award_id, $order->get_id() );
+		wp_cache_get( $cache_key, QueryCache::GROUP );
 		$wpdb->update(
 			Config::table( Config::TABLE_AWARDS ),
 			array(
@@ -522,6 +527,7 @@ final class CheckoutLock {
 			),
 			array( 'id' => $award_id )
 		);
+		wp_cache_set( $cache_key, 1, QueryCache::GROUP, 30 );
 
 		if ( $auction_id > 0 ) {
 			QueryCache::bust_auction( $auction_id );

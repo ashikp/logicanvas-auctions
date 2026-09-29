@@ -1,5 +1,13 @@
 === Logicanvas Auctions for WooCommerce — Changelog ===
 
+= 1.2.1 =
+Release date: 2026-09-29
+
+* Setup demo auction (create/delete) and clearer next-steps after pages are ready.
+* Buy Now for timed auctions: ends the lot, creates an award, and sends the buyer to payment.
+* Relist/duplicate finished auctions (admin list + seller dashboard) as a fresh draft with new dates.
+* Catalog empty state points admins to Setup / Add Auction.
+
 = 1.2.0 =
 Release date: 2026-09-27
 

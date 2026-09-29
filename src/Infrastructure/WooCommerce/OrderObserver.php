@@ -212,15 +212,18 @@ final class OrderObserver {
 				QueryCache::key( 'settlement_order', $oid ),
 				60,
 				static function () use ( $wpdb, $table, $oid ) {
-					wp_cache_get( 'wcap_db', QueryCache::GROUP );
-					return $wpdb->get_row(
-						$wpdb->prepare(
+					$cache_key = 'wcap_db_local';
+					wp_cache_get( $cache_key, QueryCache::GROUP );
+					$_result = $wpdb->get_row(
+					$wpdb->prepare(
 							'SELECT auction_id, award_id FROM %i WHERE order_id = %d LIMIT 1',
 							$table,
 							$oid
 						),
 						ARRAY_A
 					);
+					wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+					return $_result;
 				}
 			);
 			if ( is_array( $row ) ) {

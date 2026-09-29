@@ -21,7 +21,10 @@ final class Schema {
 	public function statements(): array {
 		global $wpdb;
 
+		$cache_key = 'wcap_schema_charset';
+		wp_cache_get( $cache_key, QueryCache::GROUP );
 		$charset = $wpdb->get_charset_collate();
+		wp_cache_set( $cache_key, $charset, QueryCache::GROUP, HOUR_IN_SECONDS );
 		$state   = Config::table( Config::TABLE_AUCTION_STATE );
 		$bids    = Config::table( Config::TABLE_BIDS );
 		$events  = Config::table( Config::TABLE_EVENTS );

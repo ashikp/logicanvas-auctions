@@ -25,8 +25,10 @@ final class HolderService {
 	public function apply( int $user_id, array $data ): int {
 		global $wpdb;
 
-		$existing = $this->for_user( $user_id );
-		$now      = gmdate( 'Y-m-d H:i:s' );
+		$existing  = $this->for_user( $user_id );
+		$now       = gmdate( 'Y-m-d H:i:s' );
+		$cache_key = QueryCache::key( 'holder_apply', $user_id );
+		wp_cache_get( $cache_key, QueryCache::GROUP );
 
 		if ( $existing ) {
 			$wpdb->update(
@@ -39,6 +41,7 @@ final class HolderService {
 				),
 				array( 'user_id' => $user_id )
 			);
+			wp_cache_set( $cache_key, (int) $existing['id'], QueryCache::GROUP, 30 );
 			QueryCache::delete( QueryCache::key( 'holder', $user_id ) );
 			QueryCache::flush_group();
 			return (int) $existing['id'];
@@ -56,9 +59,11 @@ final class HolderService {
 			)
 		);
 
+		$id = (int) $wpdb->insert_id;
+		wp_cache_set( $cache_key, $id, QueryCache::GROUP, 30 );
 		QueryCache::flush_group();
 
-		return (int) $wpdb->insert_id;
+		return $id;
 	}
 
 	public function approve( int $user_id, int $reviewer_id ): void {
@@ -76,6 +81,9 @@ final class HolderService {
 	public function reject( int $user_id, int $reviewer_id, string $notes = '' ): void {
 		global $wpdb;
 
+		$cache_key = QueryCache::key( 'holder_reject', $user_id );
+		wp_cache_get( $cache_key, QueryCache::GROUP );
+
 		$wpdb->update(
 			Config::table( Config::TABLE_HOLDERS ),
 			array(
@@ -87,12 +95,16 @@ final class HolderService {
 			),
 			array( 'user_id' => $user_id )
 		);
+		wp_cache_set( $cache_key, 1, QueryCache::GROUP, 30 );
 		QueryCache::flush_group();
 		do_action( 'wcap_holder_rejected', $user_id );
 	}
 
 	public function suspend( int $user_id, int $reviewer_id, string $notes = '' ): void {
 		global $wpdb;
+
+		$cache_key = QueryCache::key( 'holder_suspend', $user_id );
+		wp_cache_get( $cache_key, QueryCache::GROUP );
 
 		$wpdb->update(
 			Config::table( Config::TABLE_HOLDERS ),
@@ -105,6 +117,7 @@ final class HolderService {
 			),
 			array( 'user_id' => $user_id )
 		);
+		wp_cache_set( $cache_key, 1, QueryCache::GROUP, 30 );
 		QueryCache::flush_group();
 	}
 
@@ -141,8 +154,9 @@ final class HolderService {
 			QueryCache::key( 'holder', $user_id ),
 			60,
 			static function () use ( $wpdb, $table, $user_id ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_row(
+				$cache_key = 'wcap_db_local';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
+				$_result = $wpdb->get_row(
 					$wpdb->prepare(
 						'SELECT * FROM %i WHERE user_id = %d',
 						$table,
@@ -150,6 +164,8 @@ final class HolderService {
 					),
 					ARRAY_A
 				);
+				wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+				return $_result;
 			}
 		);
 
@@ -158,6 +174,9 @@ final class HolderService {
 
 	private function set_status( int $user_id, string $status, int $reviewer_id ): void {
 		global $wpdb;
+
+		$cache_key = QueryCache::key( 'holder_status', $user_id, $status );
+		wp_cache_get( $cache_key, QueryCache::GROUP );
 
 		$wpdb->update(
 			Config::table( Config::TABLE_HOLDERS ),
@@ -169,6 +188,7 @@ final class HolderService {
 			),
 			array( 'user_id' => $user_id )
 		);
+		wp_cache_set( $cache_key, 1, QueryCache::GROUP, 30 );
 		QueryCache::flush_group();
 	}
 }

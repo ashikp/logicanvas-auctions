@@ -175,23 +175,36 @@ final class ProductSync {
 			'payment_pending',
 			'sold_payment_pending',
 		);
-		$table = Config::table( Config::TABLE_AUCTION_STATE );
+		$table     = Config::table( Config::TABLE_AUCTION_STATE );
+		$cache_key = QueryCache::key( 'open_auction_product', $product_id );
+		$cached    = wp_cache_get( $cache_key, QueryCache::GROUP );
+		if ( false !== $cached && is_numeric( $cached ) ) {
+			return (int) $cached;
+		}
 
-		return (int) QueryCache::remember(
-			QueryCache::key( 'open_auction_product', $product_id ),
-			45,
-			static function () use ( $wpdb, $table, $product_id, $states ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_var(
-					$wpdb->prepare(
-						'SELECT auction_id FROM %i WHERE product_id = %d AND state IN (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) LIMIT 1',
-						$table,
-						$product_id,
-						...$states
-					)
-				);
-			}
+		$id = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				'SELECT auction_id FROM %i WHERE product_id = %d AND state IN (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) LIMIT 1',
+				$table,
+				$product_id,
+				$states[0],
+				$states[1],
+				$states[2],
+				$states[3],
+				$states[4],
+				$states[5],
+				$states[6],
+				$states[7],
+				$states[8],
+				$states[9],
+				$states[10],
+				$states[11],
+				$states[12]
+			)
 		);
+		wp_cache_set( $cache_key, $id, QueryCache::GROUP, 45 );
+
+		return $id;
 	}
 
 	/**

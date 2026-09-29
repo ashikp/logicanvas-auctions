@@ -76,8 +76,11 @@ $wcap_label_for = static function ( string $wcap_state, string $wcap_type ): str
 		<?php if ( empty( $wcap_auctions ) ) : ?>
 			<div class="wcap-empty-auction">
 				<span><?php esc_html_e( 'Catalog', 'logicanvas-auctions' ); ?></span>
-				<h2><?php esc_html_e( 'No auctions found.', 'logicanvas-auctions' ); ?></h2>
-				<p><?php esc_html_e( 'Check back soon for timed and live lots, or ask an approved holder to submit an offering.', 'logicanvas-auctions' ); ?></p>
+				<h2><?php esc_html_e( 'No auctions yet', 'logicanvas-auctions' ); ?></h2>
+				<p><?php esc_html_e( 'When lots are published they will appear here. Site admins can create a demo auction under Auctions → Setup, or add a real lot from Auctions → Add Auction.', 'logicanvas-auctions' ); ?></p>
+				<?php if ( current_user_can( 'manage_options' ) ) : ?>
+					<p><a class="wcap-btn" href="<?php echo esc_url( admin_url( 'admin.php?page=wcap-setup' ) ); ?>"><?php esc_html_e( 'Open Setup', 'logicanvas-auctions' ); ?></a></p>
+				<?php endif; ?>
 			</div>
 		<?php else : ?>
 			<div class="wcap-event-list">

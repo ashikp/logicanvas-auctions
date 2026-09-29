@@ -21,15 +21,15 @@ final class AwardsPage {
 		}
 
 		global $wpdb;
-		$table = Config::table( Config::TABLE_AWARDS );
-		$rows  = QueryCache::remember(
-			QueryCache::key( 'admin_awards' ),
-			45,
-			static function () use ( $wpdb, $table ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM %i ORDER BY id DESC LIMIT 100', $table ), ARRAY_A );
-			}
-		);
+		$table     = Config::table( Config::TABLE_AWARDS );
+		$cache_key = QueryCache::key( 'admin_awards' );
+		$rows      = wp_cache_get( $cache_key, QueryCache::GROUP );
+		if ( false === $rows || ! is_array( $rows ) ) {
+			$rows = $wpdb->get_results(
+					$wpdb->prepare( 'SELECT * FROM %i ORDER BY id DESC LIMIT 100', $table ), ARRAY_A );
+			$rows = is_array( $rows ) ? $rows : array();
+			wp_cache_set( $cache_key, $rows, QueryCache::GROUP, 45 );
+		}
 		Screen::open(
 			__( 'Awards', 'logicanvas-auctions' ),
 			__( 'Winning bids, payment deadlines, and linked WooCommerce orders.', 'logicanvas-auctions' )

@@ -40,8 +40,9 @@ final class HolderOrderService {
 			QueryCache::key( 'holder_orders', $holder_id ),
 			45,
 			static function () use ( $wpdb, $settle_t, $award_t, $state_t, $holder_id ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_results(
+				$cache_key = 'wcap_db_local';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
+				$_result = $wpdb->get_results(
 					$wpdb->prepare(
 						'SELECT s.id AS settlement_id, s.auction_id, s.award_id, s.gross_amount, s.commission_amount, s.net_amount, s.currency, s.payout_status,
 							a.order_id AS award_order_id, a.winner_id, a.status AS award_status, a.amount AS award_amount,
@@ -59,6 +60,8 @@ final class HolderOrderService {
 					),
 					ARRAY_A
 				);
+				wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+				return $_result;
 			}
 		);
 
@@ -110,8 +113,9 @@ final class HolderOrderService {
 			QueryCache::key( 'holder_extra_orders', $holder_id ),
 			45,
 			static function () use ( $wpdb, $award_t, $state_t, $holder_id ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_results(
+				$cache_key = 'wcap_db_local';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
+				$_result = $wpdb->get_results(
 					$wpdb->prepare(
 						'SELECT a.id AS award_id, a.auction_id, a.order_id, a.winner_id, a.status AS award_status, a.amount, a.currency
 						FROM %i a
@@ -125,6 +129,8 @@ final class HolderOrderService {
 					),
 					ARRAY_A
 				);
+				wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+				return $_result;
 			}
 		);
 
@@ -321,8 +327,9 @@ final class HolderOrderService {
 			QueryCache::key( 'holder_reconcile', $holder_id ),
 			30,
 			static function () use ( $wpdb, $state_t, $award_t, $holder_id ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_results(
+				$cache_key = 'wcap_db_local';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
+				$_result = $wpdb->get_results(
 					$wpdb->prepare(
 						'SELECT a.id AS award_id, a.order_id, st.auction_id, st.state, st.order_id AS state_order_id
 						FROM %i st
@@ -339,6 +346,8 @@ final class HolderOrderService {
 					),
 					ARRAY_A
 				);
+				wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+				return $_result;
 			}
 		);
 
@@ -377,14 +386,17 @@ final class HolderOrderService {
 			QueryCache::key( 'award_order', $auction_id ),
 			60,
 			static function () use ( $wpdb, $award_t, $auction_id ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_var(
+				$cache_key = 'wcap_db_local';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
+				$_result = $wpdb->get_var(
 					$wpdb->prepare(
 						'SELECT order_id FROM %i WHERE auction_id = %d AND order_id > 0 ORDER BY id DESC LIMIT 1',
 						$award_t,
 						$auction_id
 					)
 				);
+				wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+				return $_result;
 			}
 		);
 		if ( $order_id > 0 ) {
@@ -396,14 +408,17 @@ final class HolderOrderService {
 			QueryCache::key( 'state_order', $auction_id ),
 			60,
 			static function () use ( $wpdb, $state_t, $auction_id ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_var(
+				$cache_key = 'wcap_db_local';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
+				$_result = $wpdb->get_var(
 					$wpdb->prepare(
 						'SELECT order_id FROM %i WHERE auction_id = %d AND order_id > 0 LIMIT 1',
 						$state_t,
 						$auction_id
 					)
 				);
+				wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+				return $_result;
 			}
 		);
 		if ( $order_id > 0 ) {

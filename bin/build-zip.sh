@@ -43,6 +43,8 @@ rsync -a \
   --exclude 'playwright.config.js' \
   --exclude 'package.json' \
   --exclude 'package-lock.json' \
+  --exclude 'future.md' \
+  --exclude 'docs/future.md' \
   --exclude '*.zip' \
   "${ROOT}/" "${STAGE}/${NAME}/"
 

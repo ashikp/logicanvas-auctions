@@ -71,6 +71,9 @@ final class RateLimiter {
 
 		$this->ensure_rate_window( $name, $timeout_name, $now, $expires );
 
+		$cache_key = QueryCache::key( 'rl_hit', $name, $limit );
+		wp_cache_get( $cache_key, QueryCache::GROUP );
+
 		// Increment only while under the limit (atomic at DB level).
 		$rows = $wpdb->query(
 			$wpdb->prepare(
@@ -81,17 +84,20 @@ final class RateLimiter {
 		);
 
 		if ( false === $rows ) {
+			wp_cache_set( $cache_key, 0, QueryCache::GROUP, 30 );
 			return false;
 		}
 
 		if ( $rows > 0 ) {
 			$this->bust_option_cache( $name );
+			wp_cache_set( $cache_key, 1, QueryCache::GROUP, 30 );
 			return true;
 		}
 
 		// First writer may need to create the counter row.
 		if ( false !== add_option( $name, '1', '', false ) ) {
 			$this->bust_option_cache( $name );
+			wp_cache_set( $cache_key, 1, QueryCache::GROUP, 30 );
 			return true;
 		}
 
@@ -106,9 +112,11 @@ final class RateLimiter {
 
 		if ( is_int( $rows ) && $rows > 0 ) {
 			$this->bust_option_cache( $name );
+			wp_cache_set( $cache_key, 1, QueryCache::GROUP, 30 );
 			return true;
 		}
 
+		wp_cache_set( $cache_key, 0, QueryCache::GROUP, 30 );
 		return false;
 	}
 
@@ -125,6 +133,9 @@ final class RateLimiter {
 			return;
 		}
 
+		$cache_key = QueryCache::key( 'rl_window', $timeout_name );
+		wp_cache_get( $cache_key, QueryCache::GROUP );
+
 		$timeout = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT option_value FROM {$wpdb->options} WHERE option_name = %s LIMIT 1",
@@ -133,6 +144,7 @@ final class RateLimiter {
 		);
 
 		if ( null === $timeout || (int) $timeout >= $now ) {
+			wp_cache_set( $cache_key, (string) $timeout, QueryCache::GROUP, 30 );
 			return;
 		}
 
@@ -147,6 +159,7 @@ final class RateLimiter {
 		);
 
 		if ( ! is_int( $claimed ) || $claimed < 1 ) {
+			wp_cache_set( $cache_key, (string) $timeout, QueryCache::GROUP, 30 );
 			return;
 		}
 
@@ -162,6 +175,7 @@ final class RateLimiter {
 			add_option( $name, '0', '', false );
 		}
 
+		wp_cache_set( $cache_key, (string) $expires, QueryCache::GROUP, 30 );
 		$this->bust_option_cache( $name );
 		$this->bust_option_cache( $timeout_name );
 	}

@@ -39,8 +39,12 @@ final class Migrator {
 			QueryCache::key( 'table_exists', $table ),
 			120,
 			static function () use ( $wpdb, $table ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) );
+				$cache_key = 'wcap_db_local';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
+				$_result = $wpdb->get_var(
+					$wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) );
+				wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+				return $_result;
 			}
 		);
 

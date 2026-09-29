@@ -28,7 +28,7 @@ final class HoldersPage {
 
 		if ( false === $rows || ! is_array( $rows ) ) {
 			$rows = $wpdb->get_results(
-				$wpdb->prepare( 'SELECT * FROM %i ORDER BY id DESC LIMIT 100', $table ),
+					$wpdb->prepare( 'SELECT * FROM %i ORDER BY id DESC LIMIT 100', $table ),
 				ARRAY_A
 			);
 			$rows = is_array( $rows ) ? $rows : array();

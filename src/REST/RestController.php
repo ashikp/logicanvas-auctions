@@ -215,6 +215,34 @@ final class RestController {
 
 		register_rest_route(
 			$ns,
+			'/auctions/(?P<id>\d+)/buy-now',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( new AuctionController(), 'buy_now' ),
+				'permission_callback' => array( RestAccess::class, 'can_bid' ),
+				'args'                => $id_arg + array(
+					'idempotency_key' => array(
+						'type'              => 'string',
+						'required'          => false,
+						'sanitize_callback' => 'sanitize_text_field',
+					),
+				),
+			)
+		);
+
+		register_rest_route(
+			$ns,
+			'/auctions/(?P<id>\d+)/relist',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( new AuctionController(), 'relist' ),
+				'permission_callback' => array( RestAccess::class, 'logged_in' ),
+				'args'                => $id_arg,
+			)
+		);
+
+		register_rest_route(
+			$ns,
 			'/live/(?P<id>\d+)/host',
 			array(
 				'methods'             => 'POST',

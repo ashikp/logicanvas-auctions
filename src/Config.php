@@ -18,7 +18,7 @@ final class Config {
 	public const DOCS_URI        = 'https://docs.logicanvas.io/logicanvas-auctions';
 	public const REVIEW_URI      = 'https://wordpress.org/support/plugin/logicanvas-auctions/reviews/#new-post';
 	public const SLUG            = 'logicanvas-auctions';
-	public const VERSION         = '1.2.0';
+	public const VERSION         = '1.2.1';
 	public const DB_VERSION      = '1.0.2';
 	public const TEXT_DOMAIN     = 'logicanvas-auctions';
 	public const REST_NAMESPACE  = 'logicanvas-auctions/v1';

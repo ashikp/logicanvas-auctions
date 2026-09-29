@@ -5,7 +5,7 @@ Tags: woocommerce, auction, bidding, live auction, marketplace
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.2.0
+Stable tag: 1.2.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 WC requires at least: 8.0
@@ -32,6 +32,8 @@ WooCommerce is required. Elementor is optional. The plugin never stores card num
 Safe by default: WordPress login and your WooCommerce shop stay unchanged. Optional modes (replace wp-login, hide the shop catalog, redirect sellers/bidders after login) are off unless you turn them on in Setup or Settings.
 
 Pick a look under Auctions → Settings → Appearance (six themes, accent color, radius, density, cards, optional custom CSS).
+
+After pages are created, Setup can add a **demo auction** so you can try bidding immediately. Timed lots support optional **Buy Now**. Finished lots can be **relisted** as a new draft.
 
 = Auction features =
 
@@ -304,6 +306,14 @@ Yes: wp logicanvas-auctions list, close, overdue, rebuild, schema, diagnostics, 
 
 == Changelog ==
 
+= 1.2.1 =
+Release date: 2026-09-29
+
+* Setup demo auction (create/delete) and clearer next-steps after pages are ready.
+* Buy Now for timed auctions: ends the lot, creates an award, and sends the buyer to payment.
+* Relist/duplicate finished auctions (admin list + seller dashboard) as a fresh draft with new dates.
+* Catalog empty state points admins to Setup / Add Auction.
+
 = 1.2.0 =
 Release date: 2026-09-27
 
@@ -349,8 +359,11 @@ Release date: 2026-08-01
 
 == Upgrade Notice ==
 
+= 1.2.1 =
+Adds Setup demo auction, Buy Now on timed lots, and relist for finished auctions.
+
 = 1.2.0 =
-Clearer setup, soft defaults (login/shop stay available unless you opt in), and multi-design appearance themes under Auctions → Settings. Existing sites that already used the plugin login page keep that behavior.
+Clearer setup, soft defaults, and appearance themes. Existing sites that already used the plugin login page keep that behavior.
 
 = 1.1.0 =
 Adds seller edit listings, categories, admin action UI, review prompt, gallery fixes, and customizable auction/category permalinks. After upgrade, visit Settings → Permalinks and click Save (or load any admin page once) so rewrite rules flush.

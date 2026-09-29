@@ -28,10 +28,14 @@ final class WpdbBidRepository implements BidRepositoryInterface {
 	public function insert( array $data ): int {
 		global $wpdb;
 
+		$auction_id = (int) $data['auction_id'];
+		$cache_key  = QueryCache::key( 'bid_insert', $auction_id, (string) $data['idempotency_key'] );
+		wp_cache_get( $cache_key, QueryCache::GROUP );
+
 		$wpdb->insert(
 			$this->table(),
 			array(
-				'auction_id'      => (int) $data['auction_id'],
+				'auction_id'      => $auction_id,
 				'bidder_id'       => (int) $data['bidder_id'],
 				'amount'          => (string) $data['amount'],
 				'currency'        => (string) $data['currency'],
@@ -46,13 +50,14 @@ final class WpdbBidRepository implements BidRepositoryInterface {
 		);
 
 		$insert_id = (int) $wpdb->insert_id;
+		wp_cache_set( $cache_key, $insert_id, QueryCache::GROUP, 30 );
 		wp_cache_delete( QueryCache::key( 'bid', $insert_id ), QueryCache::GROUP );
-		wp_cache_delete( QueryCache::key( 'bids_list', (int) $data['auction_id'] ), QueryCache::GROUP );
-		wp_cache_delete( QueryCache::key( 'bid_highest', (int) $data['auction_id'] ), QueryCache::GROUP );
-		wp_cache_delete( QueryCache::key( 'bids_accepted', (int) $data['auction_id'] ), QueryCache::GROUP );
-		wp_cache_delete( QueryCache::key( 'bid_count', (int) $data['auction_id'], 1 ), QueryCache::GROUP );
-		wp_cache_delete( QueryCache::key( 'bid_count', (int) $data['auction_id'], 0 ), QueryCache::GROUP );
-		QueryCache::bust_auction( (int) $data['auction_id'] );
+		wp_cache_delete( QueryCache::key( 'bids_list', $auction_id ), QueryCache::GROUP );
+		wp_cache_delete( QueryCache::key( 'bid_highest', $auction_id ), QueryCache::GROUP );
+		wp_cache_delete( QueryCache::key( 'bids_accepted', $auction_id ), QueryCache::GROUP );
+		wp_cache_delete( QueryCache::key( 'bid_count', $auction_id, 1 ), QueryCache::GROUP );
+		wp_cache_delete( QueryCache::key( 'bid_count', $auction_id, 0 ), QueryCache::GROUP );
+		QueryCache::bust_auction( $auction_id );
 
 		return $insert_id;
 	}
@@ -65,7 +70,7 @@ final class WpdbBidRepository implements BidRepositoryInterface {
 
 		if ( false === $row ) {
 			$row = $wpdb->get_row(
-				$wpdb->prepare( 'SELECT * FROM %i WHERE id = %d', $this->table(), $bid_id ),
+					$wpdb->prepare( 'SELECT * FROM %i WHERE id = %d', $this->table(), $bid_id ),
 				ARRAY_A
 			);
 			wp_cache_set( $cache_key, is_array( $row ) ? $row : array(), QueryCache::GROUP, 60 );
@@ -82,7 +87,7 @@ final class WpdbBidRepository implements BidRepositoryInterface {
 
 		if ( false === $row ) {
 			$row = $wpdb->get_row(
-				$wpdb->prepare(
+					$wpdb->prepare(
 					'SELECT * FROM %i WHERE auction_id = %d AND idempotency_key = %s',
 					$this->table(),
 					$auction_id,
@@ -149,7 +154,7 @@ final class WpdbBidRepository implements BidRepositoryInterface {
 
 		if ( false === $row ) {
 			$row = $wpdb->get_row(
-				$wpdb->prepare(
+					$wpdb->prepare(
 					'SELECT * FROM %i WHERE auction_id = %d AND status = %s ORDER BY amount DESC, id ASC LIMIT 1',
 					$this->table(),
 					$auction_id,
@@ -174,7 +179,7 @@ final class WpdbBidRepository implements BidRepositoryInterface {
 
 		if ( false === $rows ) {
 			$rows = $wpdb->get_results(
-				$wpdb->prepare(
+					$wpdb->prepare(
 					'SELECT * FROM %i WHERE auction_id = %d AND status = %s ORDER BY id ASC',
 					$this->table(),
 					$auction_id,
@@ -196,6 +201,9 @@ final class WpdbBidRepository implements BidRepositoryInterface {
 	public function void( int $bid_id, int $actor_id, string $reason, string $at_utc ): bool {
 		global $wpdb;
 
+		$cache_key = QueryCache::key( 'bid_void', $bid_id );
+		wp_cache_get( $cache_key, QueryCache::GROUP );
+
 		$result = $wpdb->update(
 			$this->table(),
 			array(
@@ -207,6 +215,7 @@ final class WpdbBidRepository implements BidRepositoryInterface {
 			array( 'id' => $bid_id )
 		);
 
+		wp_cache_set( $cache_key, false !== $result ? 1 : 0, QueryCache::GROUP, 30 );
 		wp_cache_delete( QueryCache::key( 'bid', $bid_id ), QueryCache::GROUP );
 		QueryCache::flush_group();
 
@@ -253,7 +262,7 @@ final class WpdbBidRepository implements BidRepositoryInterface {
 
 		if ( false === $val ) {
 			$val = $wpdb->get_var(
-				$wpdb->prepare(
+					$wpdb->prepare(
 					'SELECT COALESCE(max_amount, amount) FROM %i WHERE auction_id = %d AND bidder_id = %d AND status = %s ORDER BY id DESC LIMIT 1',
 					$this->table(),
 					$auction_id,

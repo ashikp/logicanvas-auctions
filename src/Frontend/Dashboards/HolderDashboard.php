@@ -66,8 +66,9 @@ final class HolderDashboard {
 			QueryCache::key( 'holder_settlements', $user_id ),
 			60,
 			static function () use ( $wpdb, $table, $user_id ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_results(
+				$cache_key = 'wcap_db_local';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
+				$_result = $wpdb->get_results(
 					$wpdb->prepare(
 						'SELECT auction_id, gross_amount, commission_amount, net_amount, released_amount, currency, payout_status FROM %i WHERE holder_id = %d ORDER BY id DESC LIMIT 20',
 						$table,
@@ -75,6 +76,8 @@ final class HolderDashboard {
 					),
 					ARRAY_A
 				);
+				wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+				return $_result;
 			}
 		);
 		if ( is_array( $rows ) ) {

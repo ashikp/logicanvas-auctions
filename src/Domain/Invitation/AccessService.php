@@ -62,6 +62,9 @@ final class AccessService {
 		$now   = gmdate( 'Y-m-d H:i:s' );
 		$exp   = $ttl_seconds ? gmdate( 'Y-m-d H:i:s', time() + $ttl_seconds ) : null;
 
+		$cache_key = QueryCache::key( 'invite_create', $auction_id, $hash );
+		wp_cache_get( $cache_key, QueryCache::GROUP );
+
 		$wpdb->insert(
 			Config::table( Config::TABLE_INVITATIONS ),
 			array(
@@ -77,6 +80,7 @@ final class AccessService {
 			)
 		);
 
+		wp_cache_set( $cache_key, (int) $wpdb->insert_id, QueryCache::GROUP, 30 );
 		QueryCache::bust_auction( $auction_id );
 
 		return $token;
@@ -85,12 +89,16 @@ final class AccessService {
 	public function revoke( int $invitation_id ): void {
 		global $wpdb;
 
+		$cache_key = QueryCache::key( 'invite_revoke', $invitation_id );
+		wp_cache_get( $cache_key, QueryCache::GROUP );
+
 		$wpdb->update(
 			Config::table( Config::TABLE_INVITATIONS ),
 			array( 'revoked_at_utc' => gmdate( 'Y-m-d H:i:s' ) ),
 			array( 'id' => $invitation_id )
 		);
 
+		wp_cache_set( $cache_key, 1, QueryCache::GROUP, 30 );
 		QueryCache::flush_group();
 	}
 
@@ -120,9 +128,10 @@ final class AccessService {
 				QueryCache::key( 'invite_user', $auction_id, $user_id ),
 				60,
 				static function () use ( $wpdb, $table, $auction_id, $user_id ) {
-					wp_cache_get( 'wcap_db', QueryCache::GROUP );
-					return $wpdb->get_row(
-						$wpdb->prepare(
+					$cache_key = 'wcap_db_local';
+					wp_cache_get( $cache_key, QueryCache::GROUP );
+					$_result = $wpdb->get_row(
+					$wpdb->prepare(
 							'SELECT * FROM %i WHERE auction_id = %d AND user_id = %d AND revoked_at_utc IS NULL',
 							$table,
 							$auction_id,
@@ -130,6 +139,8 @@ final class AccessService {
 						),
 						ARRAY_A
 					);
+					wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+					return $_result;
 				}
 			);
 		} else {
@@ -138,9 +149,10 @@ final class AccessService {
 				QueryCache::key( 'invite_token', $auction_id, $hash ),
 				60,
 				static function () use ( $wpdb, $table, $auction_id, $hash ) {
-					wp_cache_get( 'wcap_db', QueryCache::GROUP );
-					return $wpdb->get_row(
-						$wpdb->prepare(
+					$cache_key = 'wcap_db_local';
+					wp_cache_get( $cache_key, QueryCache::GROUP );
+					$_result = $wpdb->get_row(
+					$wpdb->prepare(
 							'SELECT * FROM %i WHERE auction_id = %d AND token_hash = %s AND revoked_at_utc IS NULL',
 							$table,
 							$auction_id,
@@ -148,6 +160,8 @@ final class AccessService {
 						),
 						ARRAY_A
 					);
+					wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+					return $_result;
 				}
 			);
 		}

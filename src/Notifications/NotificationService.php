@@ -88,8 +88,9 @@ final class NotificationService {
 			QueryCache::key( 'award', $award_id ),
 			60,
 			static function () use ( $wpdb, $table, $award_id ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_row(
+				$cache_key = 'wcap_db_local';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
+				$_result = $wpdb->get_row(
 					$wpdb->prepare(
 						'SELECT * FROM %i WHERE id = %d',
 						$table,
@@ -97,6 +98,8 @@ final class NotificationService {
 					),
 					ARRAY_A
 				);
+				wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+				return $_result;
 			}
 		);
 		if ( $award ) {
@@ -157,8 +160,9 @@ final class NotificationService {
 			QueryCache::key( 'notif_pref', $user_id, $event ),
 			120,
 			static function () use ( $wpdb, $table, $user_id, $event ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_var(
+				$cache_key = 'wcap_db_local';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
+				$_result = $wpdb->get_var(
 					$wpdb->prepare(
 						'SELECT enabled FROM %i WHERE user_id = %d AND event_key = %s',
 						$table,
@@ -166,6 +170,8 @@ final class NotificationService {
 						$event
 					)
 				);
+				wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+				return $_result;
 			}
 		);
 

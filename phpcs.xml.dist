@@ -6,6 +6,11 @@
 	<exclude-pattern>*/vendor/*</exclude-pattern>
 	<rule ref="WordPress">
 		<exclude name="WordPress.Files.FileName"/>
+		<!--
+			Custom InnoDB auction tables require $wpdb. DirectQuery always fires for those
+			calls; we keep NoCaching enabled and pair every query with same-function wp_cache_*.
+		-->
+		<exclude name="WordPress.DB.DirectDatabaseQuery.DirectQuery"/>
 	</rule>
 	<config name="minimum_supported_wp_version" value="6.4"/>
 	<arg name="extensions" value="php"/>

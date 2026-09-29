@@ -134,6 +134,21 @@ $wcap_has_share_tab = ( '' !== $wcap_qr_share || '' !== $wcap_qr_text );
 						<button type="button" class="wcap-btn wcap-btn--secondary" data-wcap-quick><?php esc_html_e( 'Quick bid', 'logicanvas-auctions' ); ?></button>
 						<button type="submit" class="wcap-btn"><?php esc_html_e( 'Place bid', 'logicanvas-auctions' ); ?></button>
 					</div>
+					<?php if ( ! empty( $wcap_state['can_buy_now'] ) && ! empty( $wcap_state['buy_now_price'] ) ) : ?>
+						<p class="wcap-buy-now">
+							<button type="button" class="wcap-btn wcap-btn--secondary" data-wcap-buy-now data-id="<?php echo esc_attr( (string) $wcap_auction->id() ); ?>">
+								<?php
+								echo esc_html(
+									sprintf(
+										/* translators: %s: buy now price */
+										__( 'Buy now for %s', 'logicanvas-auctions' ),
+										(string) $wcap_state['buy_now_price']['formatted']
+									)
+								);
+								?>
+							</button>
+						</p>
+					<?php endif; ?>
 					<p class="wcap-form-status" role="status"></p>
 				</form>
 			<?php elseif ( $wcap_auction->is_holder( get_current_user_id() ) ) : ?>

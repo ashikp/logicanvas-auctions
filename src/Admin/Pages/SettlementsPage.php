@@ -28,16 +28,15 @@ final class SettlementsPage {
 		$requests = $payouts->list_all( 100 );
 
 		global $wpdb;
-		$table = Config::table( Config::TABLE_SETTLEMENTS );
-		$rows  = QueryCache::remember(
-			QueryCache::key( 'admin_settlements' ),
-			45,
-			static function () use ( $wpdb, $table ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM %i ORDER BY id DESC LIMIT 100', $table ), ARRAY_A );
-			}
-		);
-		$rows  = is_array( $rows ) ? $rows : array();
+		$table     = Config::table( Config::TABLE_SETTLEMENTS );
+		$cache_key = QueryCache::key( 'admin_settlements' );
+		$rows      = wp_cache_get( $cache_key, QueryCache::GROUP );
+		if ( false === $rows || ! is_array( $rows ) ) {
+			$rows = $wpdb->get_results(
+					$wpdb->prepare( 'SELECT * FROM %i ORDER BY id DESC LIMIT 100', $table ), ARRAY_A );
+			$rows = is_array( $rows ) ? $rows : array();
+			wp_cache_set( $cache_key, $rows, QueryCache::GROUP, 45 );
+		}
 
 		$pending_requests = 0;
 		$pending_amount   = '0.00';

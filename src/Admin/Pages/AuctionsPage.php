@@ -133,6 +133,17 @@ final class AuctionsPage {
 					)
 				);
 			}
+			if ( AuctionState::is_terminal( $state ) ) {
+				ActionUI::button(
+					array(
+						'action'  => 'relist_auction',
+						'label'   => __( 'Relist', 'logicanvas-auctions' ),
+						'fields'  => array( 'auction_id' => $auction->id() ),
+						'confirm' => __( 'Create a new draft copy of this auction (new dates, no bids)?', 'logicanvas-auctions' ),
+						'title'   => __( 'Relist auction', 'logicanvas-auctions' ),
+					)
+				);
+			}
 			echo '</div></td></tr>';
 		}
 

@@ -280,6 +280,18 @@ final class Menu {
 				$awards->close( $auction_id, $user_id, $reason ?: 'Force close' );
 				$result = true;
 				break;
+			case 'relist_auction':
+				$new_id = $service->relist( $auction_id, $user_id );
+				if ( is_wp_error( $new_id ) ) {
+					$result = $new_id;
+				} else {
+					$result = true;
+					$this->flash( 'success', __( 'Auction relisted as a new draft. Opening the editor…', 'logicanvas-auctions' ) );
+					$edit = get_edit_post_link( (int) $new_id, 'raw' );
+					wp_safe_redirect( $edit ? (string) $edit : admin_url( 'admin.php?page=wcap-auctions' ) );
+					exit;
+				}
+				break;
 			case 'approve_holder':
 				$holders->approve( isset( $_POST['holder_user_id'] ) ? absint( $_POST['holder_user_id'] ) : 0, $user_id );
 				break;
@@ -360,6 +372,7 @@ final class Menu {
 			'reject_auction'  => __( 'Auction rejected.', 'logicanvas-auctions' ),
 			'cancel_auction'  => __( 'Auction cancelled.', 'logicanvas-auctions' ),
 			'force_close'     => __( 'Auction close requested.', 'logicanvas-auctions' ),
+			'relist_auction'  => __( 'Auction relisted.', 'logicanvas-auctions' ),
 			'approve_holder'  => __( 'Holder approved.', 'logicanvas-auctions' ),
 			'reject_holder'   => __( 'Holder rejected.', 'logicanvas-auctions' ),
 			'void_bid'        => __( 'Bid voided.', 'logicanvas-auctions' ),

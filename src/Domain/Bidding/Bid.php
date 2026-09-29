@@ -19,6 +19,7 @@ final class Bid {
 	public const TYPE_QUICK      = 'quick';
 	public const TYPE_PROXY      = 'proxy';
 	public const TYPE_PROXY_FILL = 'proxy_fill';
+	public const TYPE_BUY_NOW    = 'buy_now';
 
 	/**
 	 * @param array<string, mixed> $row

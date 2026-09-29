@@ -297,6 +297,10 @@ final class AuctionService {
 				$reserve = trim( (string) $input['reserve_price'] );
 				$patch['reserve_amount'] = '' === $reserve ? null : Money::from_string( $reserve, $auction->currency() )->amount();
 			}
+			if ( isset( $input['buy_now'] ) ) {
+				$buy = trim( (string) $input['buy_now'] );
+				$patch['buy_now_amount'] = '' === $buy ? null : Money::from_string( $buy, $auction->currency() )->amount();
+			}
 		}
 
 		if ( isset( $input['start_at'] ) || isset( $input['start_at_utc'] ) ) {
@@ -726,5 +730,98 @@ final class AuctionService {
 	private function parse_utc( string $value ): string {
 		$ts = strtotime( $value );
 		return $ts ? gmdate( 'Y-m-d H:i:s', $ts ) : $this->clock->utc_mysql();
+	}
+
+	/**
+	 * Duplicate a finished auction into a new lot (fresh state, no bids/awards).
+	 *
+	 * @return int|WP_Error New auction ID.
+	 */
+	public function relist( int $source_id, int $user_id ) {
+		$source = $this->auctions->find( $source_id );
+		if ( ! $source ) {
+			return new WP_Error( 'not_found', __( 'Auction not found.', 'logicanvas-auctions' ) );
+		}
+
+		if ( $source->holder_id() !== $user_id && ! user_can( $user_id, Config::CAP_MODERATE_AUCTIONS ) ) {
+			return new WP_Error( 'forbidden', __( 'You cannot relist this auction.', 'logicanvas-auctions' ) );
+		}
+
+		if ( ! user_can( $user_id, Config::CAP_CREATE_AUCTIONS ) && ! user_can( $user_id, Config::CAP_MODERATE_AUCTIONS ) ) {
+			return new WP_Error( 'forbidden', __( 'You cannot create auctions.', 'logicanvas-auctions' ) );
+		}
+
+		$relistable = array(
+			AuctionState::UNSOLD,
+			AuctionState::COMPLETED,
+			AuctionState::CANCELLED,
+			AuctionState::RESERVE_NOT_MET,
+			AuctionState::PAYMENT_DEFAULTED,
+		);
+		if ( ! in_array( $source->state(), $relistable, true ) ) {
+			return new WP_Error( 'invalid_state', __( 'Only finished auctions can be relisted.', 'logicanvas-auctions' ) );
+		}
+
+		$post = get_post( $source_id );
+		if ( ! $post ) {
+			return new WP_Error( 'not_found', __( 'Auction post missing.', 'logicanvas-auctions' ) );
+		}
+
+		$settings = Settings::get();
+		$duration = max( 3600, (int) ( $settings['timed_default_duration'] ?? ( DAY_IN_SECONDS * 7 ) ) );
+		$now_ts   = $this->clock->timestamp();
+		$start    = gmdate( 'Y-m-d H:i:s', $now_ts );
+		$end      = $source->is_timed() ? gmdate( 'Y-m-d H:i:s', $now_ts + $duration ) : null;
+
+		$buy_now = $source->buy_now_amount();
+		$reserve = $source->reserve_amount();
+		$row     = $source->to_array();
+
+		$input = array(
+			'title'                   => $post->post_title,
+			'description'             => $post->post_content,
+			'short_description'       => $post->post_excerpt,
+			'type'                    => $source->type(),
+			'visibility'              => $source->visibility(),
+			'product_source'          => 'new',
+			'condition'               => (string) get_post_meta( $source_id, '_wcap_condition', true ),
+			'starting_price'          => $source->starting_amount()->amount(),
+			'reserve_price'           => $reserve ? $reserve->amount() : '',
+			'min_increment'           => $source->min_increment()->amount(),
+			'buy_now'                 => $buy_now ? $buy_now->amount() : '',
+			'start_at_utc'            => $start,
+			'end_at_utc'              => $end ?? '',
+			'fulfilment_type'        => sanitize_key( (string) ( $row['fulfilment_type'] ?? 'shipping' ) ),
+			'fulfilment_notes'       => (string) get_post_meta( $source_id, '_wcap_fulfilment_notes', true ),
+			'tax_class'               => sanitize_text_field( (string) ( $row['tax_class'] ?? '' ) ),
+			'shipping_class'          => sanitize_text_field( (string) ( $row['shipping_class'] ?? '' ) ),
+			'payment_deadline_hours'  => (int) ( $row['payment_deadline_hours'] ?? 48 ),
+			'proxy_enabled'           => ! empty( $row['proxy_enabled'] ),
+			'featured_image_id'       => (int) get_post_thumbnail_id( $source_id ),
+			'gallery_ids'             => get_post_meta( $source_id, '_wcap_gallery', true ),
+		);
+
+		$terms = wp_get_object_terms( $source_id, Config::TAXONOMY_CAT, array( 'fields' => 'ids' ) );
+		if ( is_array( $terms ) && ! empty( $terms[0] ) ) {
+			$input['category_id'] = (int) $terms[0];
+		}
+
+		$new_id = $this->create( $user_id, $input );
+		if ( is_wp_error( $new_id ) ) {
+			return $new_id;
+		}
+
+		update_post_meta( (int) $new_id, '_wcap_relisted_from', $source_id );
+
+		/**
+		 * Fires after an auction is relisted as a new lot.
+		 *
+		 * @param int $new_id    New auction ID.
+		 * @param int $source_id Source auction ID.
+		 * @param int $user_id   Actor.
+		 */
+		do_action( 'wcap_auction_relisted', (int) $new_id, $source_id, $user_id );
+
+		return (int) $new_id;
 	}
 }

@@ -32,6 +32,9 @@ final class WpdbEventRepository {
 	): int {
 		global $wpdb;
 
+		$cache_key = QueryCache::key( 'event_append', $auction_id, $sequence );
+		wp_cache_get( $cache_key, QueryCache::GROUP );
+
 		$wpdb->insert(
 			$this->table(),
 			array(
@@ -46,9 +49,11 @@ final class WpdbEventRepository {
 			)
 		);
 
+		$insert_id = (int) $wpdb->insert_id;
+		wp_cache_set( $cache_key, $insert_id, QueryCache::GROUP, 30 );
 		QueryCache::bust_auction( $auction_id );
 
-		return (int) $wpdb->insert_id;
+		return $insert_id;
 	}
 
 	/**
@@ -63,8 +68,9 @@ final class WpdbEventRepository {
 			$key,
 			15,
 			static function () use ( $wpdb, $table, $auction_id, $after_sequence, $limit ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_results(
+				$cache_key = 'wcap_db_local';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
+				$_result = $wpdb->get_results(
 					$wpdb->prepare(
 						'SELECT * FROM %i WHERE auction_id = %d AND sequence > %d ORDER BY sequence ASC LIMIT %d',
 						$table,
@@ -74,6 +80,8 @@ final class WpdbEventRepository {
 					),
 					ARRAY_A
 				);
+				wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+				return $_result;
 			}
 		);
 
@@ -100,14 +108,17 @@ final class WpdbEventRepository {
 			$key,
 			15,
 			static function () use ( $wpdb, $table, $auction_id ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_var(
+				$cache_key = 'wcap_db_local';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
+				$_result = $wpdb->get_var(
 					$wpdb->prepare(
 						'SELECT MAX(sequence) FROM %i WHERE auction_id = %d',
 						$table,
 						$auction_id
 					)
 				);
+				wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+				return $_result;
 			}
 		);
 	}

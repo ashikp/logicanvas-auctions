@@ -125,8 +125,9 @@ final class PayoutRequestService {
 			QueryCache::key( 'payout_pending', $holder_id ),
 			45,
 			static function () use ( $wpdb, $settle_t, $holder_id ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_results(
+				$cache_key = 'wcap_db_local';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
+				$_result = $wpdb->get_results(
 					$wpdb->prepare(
 						'SELECT net_amount, released_amount, currency FROM %i WHERE holder_id = %d AND payout_status = %s',
 						$settle_t,
@@ -135,6 +136,8 @@ final class PayoutRequestService {
 					),
 					ARRAY_A
 				);
+				wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+				return $_result;
 			}
 		);
 
@@ -158,8 +161,9 @@ final class PayoutRequestService {
 			QueryCache::key( 'payout_reserved', $holder_id ),
 			45,
 			static function () use ( $wpdb, $payout_t, $holder_id ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_var(
+				$cache_key = 'wcap_db_local';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
+				$_result = $wpdb->get_var(
 					$wpdb->prepare(
 						'SELECT COALESCE(SUM(amount), 0) FROM %i WHERE holder_id = %d AND status IN (%s, %s)',
 						$payout_t,
@@ -168,6 +172,8 @@ final class PayoutRequestService {
 						self::STATUS_APPROVED
 					)
 				);
+				wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+				return $_result;
 			}
 		);
 
@@ -233,6 +239,8 @@ final class PayoutRequestService {
 		$note    = sanitize_textarea_field( (string) ( $input['note'] ?? '' ) );
 
 		global $wpdb;
+		$cache_key = QueryCache::key( 'payout_request', $holder_id, $amount );
+		wp_cache_get( $cache_key, QueryCache::GROUP );
 		$inserted = $wpdb->insert(
 			Config::table( Config::TABLE_PAYOUT_REQUESTS ),
 			array(
@@ -253,6 +261,7 @@ final class PayoutRequestService {
 			return new \WP_Error( 'db_error', __( 'Could not create the payout request.', 'logicanvas-auctions' ) );
 		}
 
+		wp_cache_set( $cache_key, (int) $wpdb->insert_id, QueryCache::GROUP, 30 );
 		QueryCache::flush_group();
 
 		$id = (int) $wpdb->insert_id;
@@ -283,8 +292,9 @@ final class PayoutRequestService {
 			QueryCache::key( 'payouts_holder', $holder_id, $limit ),
 			60,
 			static function () use ( $wpdb, $table, $holder_id, $limit ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_results(
+				$cache_key = 'wcap_db_local';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
+				$_result = $wpdb->get_results(
 					$wpdb->prepare(
 						'SELECT * FROM %i WHERE holder_id = %d ORDER BY id DESC LIMIT %d',
 						$table,
@@ -293,6 +303,8 @@ final class PayoutRequestService {
 					),
 					ARRAY_A
 				);
+				wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+				return $_result;
 			}
 		);
 
@@ -310,8 +322,9 @@ final class PayoutRequestService {
 			QueryCache::key( 'payouts_all', $limit ),
 			60,
 			static function () use ( $wpdb, $table, $limit ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_results(
+				$cache_key = 'wcap_db_local';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
+				$_result = $wpdb->get_results(
 					$wpdb->prepare(
 						'SELECT * FROM %i ORDER BY FIELD(status, %s, %s, %s, %s, %s), id DESC LIMIT %d',
 						$table,
@@ -324,6 +337,8 @@ final class PayoutRequestService {
 					),
 					ARRAY_A
 				);
+				wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+				return $_result;
 			}
 		);
 
@@ -361,6 +376,8 @@ final class PayoutRequestService {
 
 		$now = gmdate( 'Y-m-d H:i:s' );
 		global $wpdb;
+		$cache_key = QueryCache::key( 'payout_status', $request_id, $status );
+		wp_cache_get( $cache_key, QueryCache::GROUP );
 		$wpdb->update(
 			Config::table( Config::TABLE_PAYOUT_REQUESTS ),
 			array(
@@ -373,6 +390,7 @@ final class PayoutRequestService {
 			array( 'id' => $request_id )
 		);
 
+		wp_cache_set( $cache_key, 1, QueryCache::GROUP, 30 );
 		QueryCache::flush_group();
 
 		if ( self::STATUS_PAID === $status ) {
@@ -432,6 +450,8 @@ final class PayoutRequestService {
 		}
 
 		global $wpdb;
+		$cache_key = QueryCache::key( 'payout_proof', $request_id );
+		wp_cache_get( $cache_key, QueryCache::GROUP );
 		$wpdb->update(
 			Config::table( Config::TABLE_PAYOUT_REQUESTS ),
 			array(
@@ -443,6 +463,7 @@ final class PayoutRequestService {
 			array( 'id' => $request_id )
 		);
 
+		wp_cache_set( $cache_key, 1, QueryCache::GROUP, 30 );
 		QueryCache::flush_group();
 
 		( new WpdbAuditRepository() )->write(
@@ -566,8 +587,9 @@ final class PayoutRequestService {
 			QueryCache::key( 'payout', $request_id ),
 			60,
 			static function () use ( $wpdb, $table, $request_id ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_row(
+				$cache_key = 'wcap_db_local';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
+				$_result = $wpdb->get_row(
 					$wpdb->prepare(
 						'SELECT * FROM %i WHERE id = %d',
 						$table,
@@ -575,6 +597,8 @@ final class PayoutRequestService {
 					),
 					ARRAY_A
 				);
+				wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+				return $_result;
 			}
 		);
 
@@ -599,8 +623,9 @@ final class PayoutRequestService {
 			QueryCache::key( 'settle_alloc', $holder_id ),
 			30,
 			static function () use ( $wpdb, $table, $holder_id ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_results(
+				$cache_key = 'wcap_db_local';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
+				$_result = $wpdb->get_results(
 					$wpdb->prepare(
 						'SELECT id, net_amount, released_amount FROM %i WHERE holder_id = %d AND payout_status = %s ORDER BY id ASC',
 						$table,
@@ -609,6 +634,8 @@ final class PayoutRequestService {
 					),
 					ARRAY_A
 				);
+				wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+				return $_result;
 			}
 		);
 		if ( ! is_array( $rows ) ) {
@@ -617,6 +644,8 @@ final class PayoutRequestService {
 
 		$now       = gmdate( 'Y-m-d H:i:s' );
 		$actor_id  = (int) ( $request['processed_by'] ?? 0 );
+		$cache_key = QueryCache::key( 'payout_allocate', $holder_id, (int) ( $request['id'] ?? 0 ) );
+		wp_cache_get( $cache_key, QueryCache::GROUP );
 
 		foreach ( $rows as $row ) {
 			if ( Decimal::cmp( $remaining, '0', 2 ) <= 0 ) {
@@ -653,6 +682,7 @@ final class PayoutRequestService {
 			do_action( 'wcap_payout_status_changed', (int) $row['id'], $data['payout_status'] ?? SettlementService::PAYOUT_PENDING, $actor_id );
 		}
 
+		wp_cache_set( $cache_key, 1, QueryCache::GROUP, 30 );
 		QueryCache::flush_group();
 	}
 }

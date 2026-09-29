@@ -31,10 +31,13 @@ final class SettlementService {
 			QueryCache::key( 'settlement_id', $auction_id ),
 			60,
 			static function () use ( $wpdb, $table, $auction_id ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_var(
+				$cache_key = 'wcap_db_local';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
+				$_result = $wpdb->get_var(
 					$wpdb->prepare( 'SELECT id FROM %i WHERE auction_id = %d', $table, $auction_id )
 				);
+				wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+				return $_result;
 			}
 		);
 		if ( $existing ) {
@@ -55,6 +58,9 @@ final class SettlementService {
 		$calc   = $this->calculate( $auction_id, $auction->holder_id(), $gross );
 		$now    = gmdate( 'Y-m-d H:i:s' );
 
+		$cache_key = QueryCache::key( 'settlement_insert', $auction_id, $award_id );
+		wp_cache_get( $cache_key, QueryCache::GROUP );
+
 		$wpdb->insert(
 			$table,
 			array(
@@ -74,9 +80,10 @@ final class SettlementService {
 			)
 		);
 
+		$id = (int) $wpdb->insert_id;
+		wp_cache_set( $cache_key, $id, QueryCache::GROUP, 30 );
 		QueryCache::bust_auction( $auction_id );
 
-		$id = (int) $wpdb->insert_id;
 		( new WpdbAuctionRepository() )->update_state( $auction_id, array( 'settlement_id' => $id, 'updated_at_utc' => $now ) );
 
 		do_action( 'wcap_settlement_calculated', $auction_id, $id, $calc );
@@ -148,6 +155,9 @@ final class SettlementService {
 	public function mark_order_paid( int $auction_id, int $order_id ): void {
 		global $wpdb;
 
+		$cache_key = QueryCache::key( 'settlement_order', $auction_id, $order_id );
+		wp_cache_get( $cache_key, QueryCache::GROUP );
+
 		$wpdb->update(
 			Config::table( Config::TABLE_SETTLEMENTS ),
 			array(
@@ -157,6 +167,7 @@ final class SettlementService {
 			array( 'auction_id' => $auction_id )
 		);
 
+		wp_cache_set( $cache_key, 1, QueryCache::GROUP, 30 );
 		QueryCache::bust_auction( $auction_id );
 	}
 
@@ -168,8 +179,9 @@ final class SettlementService {
 			QueryCache::key( 'settlement', $auction_id ),
 			60,
 			static function () use ( $wpdb, $table, $auction_id ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_row(
+				$cache_key = 'wcap_db_local';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
+				$_result = $wpdb->get_row(
 					$wpdb->prepare(
 						'SELECT * FROM %i WHERE auction_id = %d',
 						$table,
@@ -177,6 +189,8 @@ final class SettlementService {
 					),
 					ARRAY_A
 				);
+				wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+				return $_result;
 			}
 		);
 		if ( ! is_array( $row ) ) {
@@ -193,6 +207,9 @@ final class SettlementService {
 			$net = Money::zero( $currency );
 		}
 
+		$cache_key = QueryCache::key( 'settlement_refund', $auction_id );
+		wp_cache_get( $cache_key, QueryCache::GROUP );
+
 		$wpdb->update(
 			$table,
 			array(
@@ -204,6 +221,7 @@ final class SettlementService {
 			array( 'id' => (int) $row['id'] )
 		);
 
+		wp_cache_set( $cache_key, 1, QueryCache::GROUP, 30 );
 		QueryCache::bust_auction( $auction_id );
 	}
 
@@ -214,6 +232,8 @@ final class SettlementService {
 		}
 
 		global $wpdb;
+		$cache_key = QueryCache::key( 'settlement_payout', $settlement_id, $status );
+		wp_cache_get( $cache_key, QueryCache::GROUP );
 		$wpdb->update(
 			Config::table( Config::TABLE_SETTLEMENTS ),
 			array(
@@ -223,6 +243,7 @@ final class SettlementService {
 			array( 'id' => $settlement_id )
 		);
 
+		wp_cache_set( $cache_key, 1, QueryCache::GROUP, 30 );
 		QueryCache::flush_group();
 
 		do_action( 'wcap_payout_status_changed', $settlement_id, $status, $actor_id );
@@ -239,8 +260,9 @@ final class SettlementService {
 			QueryCache::key( 'settlement', $auction_id ),
 			60,
 			static function () use ( $wpdb, $table, $auction_id ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_row(
+				$cache_key = 'wcap_db_local';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
+				$_result = $wpdb->get_row(
 					$wpdb->prepare(
 						'SELECT * FROM %i WHERE auction_id = %d',
 						$table,
@@ -248,6 +270,8 @@ final class SettlementService {
 					),
 					ARRAY_A
 				);
+				wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+				return $_result;
 			}
 		);
 

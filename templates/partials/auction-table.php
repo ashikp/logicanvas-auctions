@@ -54,6 +54,9 @@ if ( empty( $wcap_rows ) ) {
 						<?php if ( ! empty( $wcap_row['can_accept_bid'] ) ) : ?>
 							<button type="button" class="wcap-btn" data-wcap-accept-bid data-id="<?php echo esc_attr( (string) $wcap_row['id'] ); ?>"><?php esc_html_e( 'Accept current bid', 'logicanvas-auctions' ); ?></button>
 						<?php endif; ?>
+						<?php if ( ! empty( $wcap_row['can_relist'] ) ) : ?>
+							<button type="button" class="wcap-link-btn" data-wcap-relist data-id="<?php echo esc_attr( (string) $wcap_row['id'] ); ?>"><?php esc_html_e( 'Relist', 'logicanvas-auctions' ); ?></button>
+						<?php endif; ?>
 						<?php if ( in_array( (string) ( $wcap_row['state'] ?? '' ), array( 'draft', 'rejected' ), true ) ) : ?>
 							<button type="button" class="wcap-link-btn" data-wcap-auction-action="submit" data-id="<?php echo esc_attr( (string) $wcap_row['id'] ); ?>"><?php esc_html_e( 'Submit for review', 'logicanvas-auctions' ); ?></button>
 						<?php endif; ?>

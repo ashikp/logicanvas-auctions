@@ -21,6 +21,8 @@ playwright.config.js
 package.json
 package-lock.json
 assets/src
+future.md
+docs/future.md
 .DS_Store
 Thumbs.db
 *.zip

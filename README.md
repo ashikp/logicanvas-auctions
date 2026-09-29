@@ -11,7 +11,7 @@
 | | |
 | --- | --- |
 | **Plugin slug** | `logicanvas-auctions` |
-| **Version** | 1.2.0 |
+| **Version** | 1.2.1 |
 | **Author** | [Logicanvas.io](https://logicanvas.io) |
 | **Plugin URI** | https://wordpress.org/plugins/logicanvas-auctions/ |
 | **Documentation** | https://docs.logicanvas.io/logicanvas-auctions |
@@ -632,6 +632,11 @@ When requesting help, include WordPress, WooCommerce, PHP versions, and relevant
 ---
 
 ## Changelog
+
+### 1.2.1
+
+- Setup **demo auction**, **Buy Now** on timed lots, and **relist** finished auctions
+- Clearer catalog empty state for new installs
 
 ### 1.2.0
 

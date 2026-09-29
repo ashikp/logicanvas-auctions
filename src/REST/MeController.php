@@ -28,8 +28,9 @@ final class MeController {
 			QueryCache::key( 'me_leading', $user_id ),
 			45,
 			static function () use ( $wpdb, $state_t, $user_id ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_results(
+				$cache_key = 'wcap_db_local';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
+				$_result = $wpdb->get_results(
 					$wpdb->prepare(
 						'SELECT auction_id, current_amount, currency, state FROM %i WHERE current_leader_id = %d ORDER BY updated_at_utc DESC LIMIT 50',
 						$state_t,
@@ -37,6 +38,8 @@ final class MeController {
 					),
 					ARRAY_A
 				);
+				wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+				return $_result;
 			}
 		);
 
@@ -45,8 +48,9 @@ final class MeController {
 			QueryCache::key( 'me_awards', $user_id ),
 			45,
 			static function () use ( $wpdb, $award_t, $user_id ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_results(
+				$cache_key = 'wcap_db_local';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
+				$_result = $wpdb->get_results(
 					$wpdb->prepare(
 						'SELECT id, auction_id, amount, currency, status, payment_deadline_utc, order_id FROM %i WHERE winner_id = %d ORDER BY id DESC LIMIT 50',
 						$award_t,
@@ -54,6 +58,8 @@ final class MeController {
 					),
 					ARRAY_A
 				);
+				wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+				return $_result;
 			}
 		);
 

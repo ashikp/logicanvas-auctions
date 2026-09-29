@@ -67,6 +67,7 @@ final class AuctionPresenter {
 			'accepts_bids'     => $auction->accepts_bids(),
 			'is_leading'       => $viewer_id > 0 && $auction->current_leader_id() === $viewer_id,
 			'can_bid'          => $viewer_id > 0 && ! $auction->is_holder( $viewer_id ) && $auction->accepts_bids(),
+			'can_buy_now'      => $this->can_buy_now( $auction, $viewer_id ),
 			'can_accept_bid'   => $this->can_accept_highest( $auction, $viewer_id ),
 			'can_edit'         => $this->can_edit( $auction, $viewer_id ),
 			'edit_url'         => $this->edit_listing_url( $auction, $viewer_id ),
@@ -77,6 +78,11 @@ final class AuctionPresenter {
 			'permalink'        => get_permalink( $auction->id() ),
 			'realtime_mode'    => (string) Settings::get()['realtime_mode'],
 		);
+
+		$buy_now = $auction->buy_now_amount();
+		if ( $buy_now && $buy_now->greater_than( $auction->current_amount() ) ) {
+			$payload['buy_now_price'] = $buy_now->to_rest();
+		}
 
 		if ( 'always' === $display && $reserve ) {
 			$payload['reserve_price'] = $reserve->to_rest();
@@ -194,6 +200,20 @@ final class AuctionPresenter {
 		}
 
 		return $auction->bid_count() > 0;
+	}
+
+	private function can_buy_now( Auction $auction, int $viewer_id ): bool {
+		if ( $viewer_id < 1 || ! $auction->is_timed() || ! $auction->accepts_bids() ) {
+			return false;
+		}
+		if ( $auction->is_holder( $viewer_id ) || ! user_can( $viewer_id, \LogicanvasAuctions\Config::CAP_BID ) ) {
+			return false;
+		}
+		$buy = $auction->buy_now_amount();
+		if ( ! $buy || ! $buy->greater_than( $auction->current_amount() ) ) {
+			return false;
+		}
+		return true;
 	}
 
 	/**

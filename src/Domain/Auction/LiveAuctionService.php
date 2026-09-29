@@ -113,7 +113,9 @@ final class LiveAuctionService {
 	public function heartbeat( int $auction_id, int $user_id ): void {
 		global $wpdb;
 
-		$now = gmdate( 'Y-m-d H:i:s' );
+		$now       = gmdate( 'Y-m-d H:i:s' );
+		$cache_key = QueryCache::key( 'participant_hb', $auction_id, $user_id );
+		wp_cache_get( $cache_key, QueryCache::GROUP );
 		$wpdb->query(
 			$wpdb->prepare(
 				'INSERT INTO %i (auction_id, user_id, role, joined_at_utc, last_seen_utc) VALUES (%d, %d, %s, %s, %s)
@@ -126,6 +128,7 @@ final class LiveAuctionService {
 				$now
 			)
 		);
+		wp_cache_set( $cache_key, 1, QueryCache::GROUP, 30 );
 
 		QueryCache::bust_auction( $auction_id );
 	}
@@ -140,8 +143,9 @@ final class LiveAuctionService {
 			QueryCache::key( 'participants', $auction_id, $cutoff ),
 			15,
 			static function () use ( $wpdb, $table, $auction_id, $cutoff ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_var(
+				$cache_key = 'wcap_db_local';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
+				$_result = $wpdb->get_var(
 					$wpdb->prepare(
 						'SELECT COUNT(*) FROM %i WHERE auction_id = %d AND last_seen_utc >= %s',
 						$table,
@@ -149,6 +153,8 @@ final class LiveAuctionService {
 						$cutoff
 					)
 				);
+				wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+				return $_result;
 			}
 		);
 	}

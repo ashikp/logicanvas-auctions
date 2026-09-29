@@ -28,6 +28,9 @@ final class WpdbAuditRepository {
 	): void {
 		global $wpdb;
 
+		$cache_key = QueryCache::key( 'audit_write', $auction_id, $action, $created_at_utc );
+		wp_cache_get( $cache_key, QueryCache::GROUP );
+
 		$wpdb->insert(
 			Config::table( Config::TABLE_AUDIT ),
 			array(
@@ -41,6 +44,8 @@ final class WpdbAuditRepository {
 				'created_at_utc'   => $created_at_utc,
 			)
 		);
+
+		wp_cache_set( $cache_key, (int) $wpdb->insert_id, QueryCache::GROUP, 30 );
 
 		if ( $auction_id > 0 ) {
 			QueryCache::bust_auction( $auction_id );
@@ -61,8 +66,9 @@ final class WpdbAuditRepository {
 			$key,
 			60,
 			static function () use ( $wpdb, $table, $auction_id, $limit ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_results(
+				$cache_key = 'wcap_db_local';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
+				$_result = $wpdb->get_results(
 					$wpdb->prepare(
 						'SELECT * FROM %i WHERE auction_id = %d ORDER BY id DESC LIMIT %d',
 						$table,
@@ -71,6 +77,8 @@ final class WpdbAuditRepository {
 					),
 					ARRAY_A
 				);
+				wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+				return $_result;
 			}
 		);
 

@@ -242,6 +242,219 @@ final class AwardService {
 		return true;
 	}
 
+	/**
+	 * Purchase at the fixed Buy Now price (timed auctions only). Ends the auction and creates an award.
+	 *
+	 * @return true|\WP_Error
+	 */
+	public function buy_now( int $auction_id, int $user_id, string $idempotency_key = '' ) {
+		$key = sanitize_text_field( $idempotency_key );
+		if ( '' === $key ) {
+			$key = 'buy-now-' . $auction_id . '-' . $user_id . '-' . wp_generate_password( 12, false, false );
+		}
+		$key = substr( $key, 0, 64 );
+
+		if ( $user_id < 1 ) {
+			return new \WP_Error( 'unauthenticated', __( 'You must be logged in to buy now.', 'logicanvas-auctions' ), array( 'status' => 401 ) );
+		}
+
+		if ( ! user_can( $user_id, Config::CAP_BID ) ) {
+			return new \WP_Error( 'forbidden', __( 'Your account cannot purchase auction lots.', 'logicanvas-auctions' ), array( 'status' => 403 ) );
+		}
+
+		$auction = $this->auctions->find( $auction_id );
+		if ( ! $auction ) {
+			return new \WP_Error( 'not_found', __( 'Auction not found.', 'logicanvas-auctions' ), array( 'status' => 404 ) );
+		}
+
+		if ( ! $auction->is_timed() ) {
+			return new \WP_Error( 'invalid_type', __( 'Buy Now is only available on timed auctions.', 'logicanvas-auctions' ), array( 'status' => 400 ) );
+		}
+
+		$buy_now = $auction->buy_now_amount();
+		if ( ! $buy_now ) {
+			return new \WP_Error( 'unavailable', __( 'This auction does not have a Buy Now price.', 'logicanvas-auctions' ), array( 'status' => 400 ) );
+		}
+
+		if ( $auction->is_holder( $user_id ) ) {
+			return new \WP_Error( 'forbidden', __( 'You cannot buy your own auction.', 'logicanvas-auctions' ), array( 'status' => 403 ) );
+		}
+
+		$existing = $this->for_auction( $auction_id );
+		if ( $existing && self::CANCELLED !== $existing['status'] ) {
+			if ( (int) $existing['winner_id'] === $user_id ) {
+				return true;
+			}
+			return new \WP_Error( 'closed', __( 'This auction is already sold.', 'logicanvas-auctions' ), array( 'status' => 409 ) );
+		}
+
+		$replay = $this->bids->find_by_idempotency( $auction_id, $key );
+		if ( $replay && $replay->bidder_id() === $user_id && Bid::TYPE_BUY_NOW === $replay->type() ) {
+			return true;
+		}
+
+		$lock = 'wcap_close_' . $auction_id;
+		if ( ! $this->acquire( $lock ) ) {
+			return new \WP_Error( 'busy', __( 'This auction is already closing. Please wait a moment.', 'logicanvas-auctions' ), array( 'status' => 409 ) );
+		}
+
+		try {
+			Transaction::run(
+				function () use ( $auction_id, $user_id, $key ) {
+					$auction = $this->auctions->find_for_update( $auction_id );
+					if ( ! $auction || ! $auction->is_timed() ) {
+						throw new \RuntimeException( 'not_found' );
+					}
+
+					if ( ! in_array( $auction->state(), array( AuctionState::ACTIVE ), true ) ) {
+						throw new \RuntimeException( 'invalid_state' );
+					}
+
+					$buy_now = $auction->buy_now_amount();
+					if ( ! $buy_now ) {
+						throw new \RuntimeException( 'unavailable' );
+					}
+
+					if ( ! $buy_now->greater_than( $auction->current_amount() ) ) {
+						throw new \RuntimeException( 'price_passed' );
+					}
+
+					$end = $auction->end_at_utc() ? strtotime( $auction->end_at_utc() . ' UTC' ) : 0;
+					if ( $end && $this->clock->timestamp() >= $end ) {
+						throw new \RuntimeException( 'ended' );
+					}
+
+					if ( $auction->is_holder( $user_id ) ) {
+						throw new \RuntimeException( 'self' );
+					}
+
+					$access = new \LogicanvasAuctions\Domain\Invitation\AccessService();
+					if ( ! $access->can_view( $auction, $user_id, '' ) ) {
+						throw new \RuntimeException( 'access' );
+					}
+
+					$holder = new \LogicanvasAuctions\Domain\Holder\HolderService();
+					if ( $holder->is_suspended_user( $user_id ) ) {
+						throw new \RuntimeException( 'suspended' );
+					}
+
+					$existing = $this->for_auction( $auction_id );
+					if ( $existing && self::CANCELLED !== $existing['status'] ) {
+						return true;
+					}
+
+					$replay = $this->bids->find_by_idempotency( $auction_id, $key );
+					if ( $replay ) {
+						return true;
+					}
+
+					$now = $this->clock->utc_mysql();
+					$bid_id = $this->bids->insert(
+						array(
+							'auction_id'      => $auction_id,
+							'bidder_id'       => $user_id,
+							'amount'          => $buy_now->amount(),
+							'currency'        => $auction->currency(),
+							'type'            => Bid::TYPE_BUY_NOW,
+							'max_amount'      => null,
+							'status'          => Bid::STATUS_ACCEPTED,
+							'idempotency_key' => $key,
+							'ip_hash'         => null,
+							'user_agent_hash' => null,
+							'created_at_utc'  => $now,
+						)
+					);
+
+					$seq = $auction->sequence() + 1;
+					$this->auctions->update_state(
+						$auction_id,
+						array(
+							'current_amount'    => $buy_now->amount(),
+							'current_leader_id' => $user_id,
+							'bid_count'         => $auction->bid_count() + 1,
+							'sequence'          => $seq,
+							'updated_at_utc'    => $now,
+						)
+					);
+
+					$this->events->insert(
+						array(
+							'auction_id'      => $auction_id,
+							'sequence'        => $seq,
+							'event_type'      => 'buy_now',
+							'actor_id'        => $user_id,
+							'actor_type'      => 'user',
+							'payload'         => wp_json_encode(
+								array(
+									'bid_id' => $bid_id,
+									'amount' => $buy_now->amount(),
+								)
+							),
+							'correlation_key' => $key,
+							'created_at_utc'  => $now,
+						)
+					);
+
+					$bid = $this->bids->find( $bid_id );
+					if ( ! $bid ) {
+						throw new \RuntimeException( 'bid_missing' );
+					}
+
+					$auction = $this->auctions->find_for_update( $auction_id );
+					if ( ! $auction ) {
+						throw new \RuntimeException( 'not_found' );
+					}
+
+					$reason = 'Buy Now purchase';
+					$this->auction_service->transition( $auction_id, AuctionState::CLOSING, $user_id, 'user', $reason, 'buy-now-' . $auction_id );
+					$this->auction_service->transition( $auction_id, AuctionState::ENDED, $user_id, 'user', $reason, 'buy-now-ended-' . $auction_id );
+
+					$award_id = $this->create_award( $auction, $bid );
+					$this->auction_service->transition( $auction_id, AuctionState::PAYMENT_PENDING, $user_id, 'user', 'Winner awarded via Buy Now', 'buy-now-award-' . $auction_id );
+
+					$this->auctions->update_state(
+						$auction_id,
+						array(
+							'award_id'       => $award_id,
+							'updated_at_utc' => $this->clock->utc_mysql(),
+						)
+					);
+
+					$hours    = $auction->payment_deadline_hours();
+					$deadline = gmdate( 'Y-m-d H:i:s', $this->clock->timestamp() + ( $hours * HOUR_IN_SECONDS ) );
+					$this->scheduler->unschedule_close( $auction_id );
+					$this->scheduler->schedule_payment_deadline( $award_id, $auction_id, $deadline );
+
+					( new SettlementService() )->create_pending_for_award( $auction_id, $award_id );
+
+					do_action( 'wcap_award_created', $auction_id, $award_id, $user_id );
+					do_action( 'wcap_auction_closed', $auction_id, 'buy_now' );
+					do_action( 'wcap_buy_now_completed', $auction_id, $award_id, $user_id );
+
+					return true;
+				}
+			);
+		} catch ( \Throwable $e ) {
+			$code = $e->getMessage();
+			$map  = array(
+				'invalid_state' => array( 'invalid_state', __( 'This auction is not open for Buy Now.', 'logicanvas-auctions' ), 400 ),
+				'unavailable'   => array( 'unavailable', __( 'This auction does not have a Buy Now price.', 'logicanvas-auctions' ), 400 ),
+				'price_passed'  => array( 'price_passed', __( 'Bidding has passed the Buy Now price.', 'logicanvas-auctions' ), 409 ),
+				'ended'         => array( 'ended', __( 'This auction has already ended.', 'logicanvas-auctions' ), 409 ),
+				'self'          => array( 'forbidden', __( 'You cannot buy your own auction.', 'logicanvas-auctions' ), 403 ),
+				'access'        => array( 'forbidden', __( 'You do not have access to this auction.', 'logicanvas-auctions' ), 403 ),
+				'suspended'     => array( 'forbidden', __( 'Your account cannot purchase auction lots.', 'logicanvas-auctions' ), 403 ),
+				'not_found'     => array( 'not_found', __( 'Auction not found.', 'logicanvas-auctions' ), 404 ),
+			);
+			$err = $map[ $code ] ?? array( 'buy_now_failed', __( 'Could not complete Buy Now. Please try again.', 'logicanvas-auctions' ), 400 );
+			return new \WP_Error( $err[0], $err[1], array( 'status' => $err[2] ) );
+		} finally {
+			$this->release( $lock );
+		}
+
+		return true;
+	}
+
 	public function mark_unsold( int $auction_id, int $actor_id, string $reason ): void {
 		$auction = $this->auctions->find( $auction_id );
 		if ( ! $auction ) {
@@ -265,8 +478,9 @@ final class AwardService {
 			QueryCache::key( 'award', $award_id ),
 			60,
 			static function () use ( $wpdb, $table, $award_id ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_row(
+				$cache_key = 'wcap_db_local';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
+				$_result = $wpdb->get_row(
 					$wpdb->prepare(
 						'SELECT * FROM %i WHERE id = %d',
 						$table,
@@ -274,6 +488,8 @@ final class AwardService {
 					),
 					ARRAY_A
 				);
+				wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+				return $_result;
 			}
 		);
 
@@ -291,8 +507,9 @@ final class AwardService {
 			QueryCache::key( 'award_auction', $auction_id ),
 			60,
 			static function () use ( $wpdb, $table, $auction_id ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_row(
+				$cache_key = 'wcap_db_local';
+				wp_cache_get( $cache_key, QueryCache::GROUP );
+				$_result = $wpdb->get_row(
 					$wpdb->prepare(
 						'SELECT * FROM %i WHERE auction_id = %d ORDER BY id DESC LIMIT 1',
 						$table,
@@ -300,6 +517,8 @@ final class AwardService {
 					),
 					ARRAY_A
 				);
+				wp_cache_set( $cache_key, $_result, QueryCache::GROUP, 30 );
+				return $_result;
 			}
 		);
 
@@ -313,6 +532,9 @@ final class AwardService {
 		if ( ! $award ) {
 			return;
 		}
+
+		$cache_key = QueryCache::key( 'award_mark_paid', $award_id, $order_id );
+		wp_cache_get( $cache_key, QueryCache::GROUP );
 
 		if ( self::PAID !== $award['status'] ) {
 			$wpdb->update(
@@ -335,6 +557,7 @@ final class AwardService {
 			);
 		}
 
+		wp_cache_set( $cache_key, 1, QueryCache::GROUP, 30 );
 		QueryCache::bust_auction( (int) $award['auction_id'] );
 
 		$auction_id = (int) $award['auction_id'];
@@ -387,6 +610,8 @@ final class AwardService {
 		}
 
 		global $wpdb;
+		$cache_key = QueryCache::key( 'award_expire', $award_id );
+		wp_cache_get( $cache_key, QueryCache::GROUP );
 		$wpdb->update(
 			Config::table( Config::TABLE_AWARDS ),
 			array(
@@ -395,6 +620,7 @@ final class AwardService {
 			),
 			array( 'id' => $award_id )
 		);
+		wp_cache_set( $cache_key, 1, QueryCache::GROUP, 30 );
 
 		QueryCache::bust_auction( (int) $award['auction_id'] );
 
@@ -414,6 +640,9 @@ final class AwardService {
 		$deadline = gmdate( 'Y-m-d H:i:s', $this->clock->timestamp() + ( $auction->payment_deadline_hours() * HOUR_IN_SECONDS ) );
 		$now      = $this->clock->utc_mysql();
 
+		$cache_key = QueryCache::key( 'award_create', $auction->id(), $key );
+		wp_cache_get( $cache_key, QueryCache::GROUP );
+
 		$wpdb->insert(
 			Config::table( Config::TABLE_AWARDS ),
 			array(
@@ -430,9 +659,11 @@ final class AwardService {
 			)
 		);
 
+		$award_id = (int) $wpdb->insert_id;
+		wp_cache_set( $cache_key, $award_id, QueryCache::GROUP, 30 );
 		QueryCache::bust_auction( $auction->id() );
 
-		return (int) $wpdb->insert_id;
+		return $award_id;
 	}
 
 	private function acquire( string $key ): bool {

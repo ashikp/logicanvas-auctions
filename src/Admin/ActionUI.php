@@ -284,6 +284,7 @@ final class ActionUI {
 			'reject_auction'  => 'dashicons-dismiss',
 			'reject_holder'   => 'dashicons-dismiss',
 			'force_close'     => 'dashicons-lock',
+			'relist_auction'  => 'dashicons-controls-repeat',
 			'cancel_auction'  => 'dashicons-no-alt',
 			'void_bid'        => 'dashicons-trash',
 		);

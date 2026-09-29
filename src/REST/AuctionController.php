@@ -204,4 +204,62 @@ final class AuctionController {
 			)
 		);
 	}
+
+	public function buy_now( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+		$id  = (int) $request['id'];
+		$key = sanitize_text_field( (string) $request->get_param( 'idempotency_key' ) );
+		if ( '' === $key ) {
+			$key = sanitize_text_field( (string) $request->get_header( 'X-Idempotency-Key' ) );
+		}
+
+		$result = ( new \LogicanvasAuctions\Domain\Award\AwardService() )->buy_now( $id, get_current_user_id(), $key );
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+
+		$auction = ( new WpdbAuctionRepository() )->find( $id );
+		if ( ! $auction ) {
+			return new WP_REST_Response( array( 'ok' => true, 'id' => $id ) );
+		}
+
+		return new WP_REST_Response(
+			array(
+				'ok'      => true,
+				'auction' => ( new AuctionPresenter() )->public_state( $auction, get_current_user_id() ),
+			)
+		);
+	}
+
+	public function relist( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+		$id     = (int) $request['id'];
+		$new_id = ( new \LogicanvasAuctions\Domain\Auction\AuctionService() )->relist( $id, get_current_user_id() );
+		if ( is_wp_error( $new_id ) ) {
+			$code   = $new_id->get_error_code();
+			$status = 'forbidden' === $code ? 403 : ( 'not_found' === $code ? 404 : 400 );
+			$new_id->add_data( array( 'status' => $status ) );
+			return $new_id;
+		}
+
+		$auction = ( new WpdbAuctionRepository() )->find( (int) $new_id );
+		$edit    = '';
+		if ( $auction ) {
+			$edit = \LogicanvasAuctions\Frontend\Dashboards\AccountRouter::url(
+				\LogicanvasAuctions\Frontend\Dashboards\AccountRouter::EDIT,
+				\LogicanvasAuctions\Frontend\Dashboards\AccountRouter::MODE_SELLER,
+				array( 'auction_id' => (int) $new_id )
+			);
+		}
+
+		return new WP_REST_Response(
+			array(
+				'ok'       => true,
+				'id'       => (int) $new_id,
+				'edit_url' => $edit,
+				'admin_url'=> current_user_can( \LogicanvasAuctions\Config::CAP_MODERATE_AUCTIONS )
+					? get_edit_post_link( (int) $new_id, 'raw' )
+					: '',
+			),
+			201
+		);
+	}
 }

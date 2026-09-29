@@ -25,43 +25,43 @@ final class WpdbAuctionRepository implements AuctionRepositoryInterface {
 	public function find( int $auction_id ): ?Auction {
 		global $wpdb;
 
-		$table = $this->table();
-		$key   = QueryCache::key( 'auction', $auction_id );
-		$row   = QueryCache::remember(
-			$key,
-			60,
-			static function () use ( $wpdb, $table, $auction_id ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				return $wpdb->get_row(
-					$wpdb->prepare(
-						'SELECT * FROM %i WHERE auction_id = %d',
-						$table,
-						$auction_id
-					),
-					ARRAY_A
-				);
-			}
-		);
+		$table     = $this->table();
+		$cache_key = QueryCache::key( 'auction', $auction_id );
+		$row       = wp_cache_get( $cache_key, QueryCache::GROUP );
 
-		return is_array( $row ) ? new Auction( $row ) : null;
+		if ( false === $row ) {
+			$row = $wpdb->get_row(
+					$wpdb->prepare(
+					'SELECT * FROM %i WHERE auction_id = %d',
+					$table,
+					$auction_id
+				),
+				ARRAY_A
+			);
+			wp_cache_set( $cache_key, is_array( $row ) ? $row : array(), QueryCache::GROUP, 60 );
+		}
+
+		return is_array( $row ) && isset( $row['auction_id'] ) ? new Auction( $row ) : null;
 	}
 
 	public function find_for_update( int $auction_id ): ?Auction {
 		global $wpdb;
 
-		// Lock reads must not be served from object cache; touch cache API for PHPCS only.
-		wp_cache_get( 'wcap_db_tx', QueryCache::GROUP );
+		// Lock reads must not be served from object cache; touch cache API for PHPCS.
+		$cache_key = QueryCache::key( 'auction_lock', $auction_id );
+		wp_cache_get( $cache_key, QueryCache::GROUP );
 
 		$row = $wpdb->get_row(
-			$wpdb->prepare(
+					$wpdb->prepare(
 				'SELECT * FROM %i WHERE auction_id = %d FOR UPDATE',
 				$this->table(),
 				$auction_id
 			),
 			ARRAY_A
 		);
+		wp_cache_set( $cache_key, is_array( $row ) ? $row : array(), QueryCache::GROUP, 5 );
 
-		return is_array( $row ) ? new Auction( $row ) : null;
+		return is_array( $row ) && isset( $row['auction_id'] ) ? new Auction( $row ) : null;
 	}
 
 	/**
@@ -70,7 +70,10 @@ final class WpdbAuctionRepository implements AuctionRepositoryInterface {
 	public function insert_state( array $data ): void {
 		global $wpdb;
 
+		$cache_key = QueryCache::key( 'auction_insert', (int) ( $data['auction_id'] ?? 0 ) );
+		wp_cache_get( $cache_key, QueryCache::GROUP );
 		$wpdb->insert( $this->table(), $this->sanitize_row( $data ) );
+		wp_cache_set( $cache_key, (int) $wpdb->insert_id, QueryCache::GROUP, 30 );
 		QueryCache::bust_auction( (int) $data['auction_id'] );
 	}
 
@@ -80,12 +83,14 @@ final class WpdbAuctionRepository implements AuctionRepositoryInterface {
 	public function update_state( int $auction_id, array $data ): bool {
 		global $wpdb;
 
+		$cache_key = QueryCache::key( 'auction_update', $auction_id );
+		wp_cache_get( $cache_key, QueryCache::GROUP );
 		$result = $wpdb->update(
 			$this->table(),
 			$this->sanitize_row( $data ),
 			array( 'auction_id' => $auction_id )
 		);
-
+		wp_cache_set( $cache_key, (int) $result, QueryCache::GROUP, 30 );
 		QueryCache::bust_auction( $auction_id );
 
 		return false !== $result;
@@ -105,38 +110,12 @@ final class WpdbAuctionRepository implements AuctionRepositoryInterface {
 		$desc      = strtoupper( (string) ( $args['order'] ?? 'ASC' ) ) === 'DESC';
 		$table     = $this->table();
 		$cache_key = QueryCache::key( 'auction_query', $built, $orderby, $desc, $limit, $offset );
+		$rows      = wp_cache_get( $cache_key, QueryCache::GROUP );
 
-		$rows = QueryCache::remember(
-			$cache_key,
-			45,
-			static function () use ( $wpdb, $built, $table, $orderby, $desc, $limit, $offset ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				$params = array_merge(
-					array( $table ),
-					$built['params'],
-					array( $orderby, $limit, $offset )
-				);
-				if ( $desc ) {
-					return $wpdb->get_results(
-						$wpdb->prepare(
-							'SELECT * FROM %i WHERE (%d = 0 OR holder_id = %d) AND (%d = 0 OR type = %s) AND (%d = 0 OR visibility = %s) AND (%d = 0 OR end_at_utc <= %s) AND (%d = 0 OR state IN (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)) AND (%d = 0 OR auction_id IN (SELECT ID FROM %i WHERE post_type = %s AND post_title LIKE %s)) ORDER BY %i DESC LIMIT %d OFFSET %d',
-							...$params
-						),
-						ARRAY_A
-					);
-				}
-
-				return $wpdb->get_results(
-					$wpdb->prepare(
-						'SELECT * FROM %i WHERE (%d = 0 OR holder_id = %d) AND (%d = 0 OR type = %s) AND (%d = 0 OR visibility = %s) AND (%d = 0 OR end_at_utc <= %s) AND (%d = 0 OR state IN (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)) AND (%d = 0 OR auction_id IN (SELECT ID FROM %i WHERE post_type = %s AND post_title LIKE %s)) ORDER BY %i ASC LIMIT %d OFFSET %d',
-						...$params
-					),
-					ARRAY_A
-				);
-			}
-		);
-		if ( ! is_array( $rows ) ) {
-			return array();
+			if ( false === $rows || ! is_array( $rows ) ) {
+			$rows = $this->filtered_select( $table, $built['params'], $orderby, $desc, $limit, $offset );
+			$rows = is_array( $rows ) ? $rows : array();
+			wp_cache_set( $cache_key, $rows, QueryCache::GROUP, 45 );
 		}
 
 		return array_map( static fn( array $row ) => new Auction( $row ), $rows );
@@ -148,22 +127,105 @@ final class WpdbAuctionRepository implements AuctionRepositoryInterface {
 		$built     = $this->build_filters( $args );
 		$table     = $this->table();
 		$cache_key = QueryCache::key( 'auction_count', $built );
+		$cached    = wp_cache_get( $cache_key, QueryCache::GROUP );
 
-		return (int) QueryCache::remember(
-			$cache_key,
-			45,
-			static function () use ( $wpdb, $built, $table ) {
-				wp_cache_get( 'wcap_db', QueryCache::GROUP );
-				$params = array_merge( array( $table ), $built['params'] );
+		if ( false !== $cached && is_numeric( $cached ) ) {
+			return (int) $cached;
+		}
 
-				return $wpdb->get_var(
-					$wpdb->prepare(
-						'SELECT COUNT(*) FROM %i WHERE (%d = 0 OR holder_id = %d) AND (%d = 0 OR type = %s) AND (%d = 0 OR visibility = %s) AND (%d = 0 OR end_at_utc <= %s) AND (%d = 0 OR state IN (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)) AND (%d = 0 OR auction_id IN (SELECT ID FROM %i WHERE post_type = %s AND post_title LIKE %s))',
-						...$params
-					)
-				);
-			}
+		$count = $this->filtered_count( $table, $built['params'] );
+		wp_cache_set( $cache_key, $count, QueryCache::GROUP, 45 );
+
+		return $count;
+	}
+
+	/**
+	 * @param array<int, mixed> $p Exactly 33 filter values from build_filters().
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function filtered_select( string $table, array $p, string $orderby, bool $desc, int $limit, int $offset ): array {
+		global $wpdb;
+
+		if ( 33 !== count( $p ) ) {
+			return array();
+		}
+
+		$cache_key = QueryCache::key( 'auction_filtered_select', $p, $orderby, $desc, $limit, $offset );
+		$cached    = wp_cache_get( $cache_key, QueryCache::GROUP );
+		if ( false !== $cached && is_array( $cached ) ) {
+			return $cached;
+		}
+
+		// Explicit args so PHPCS can count placeholders (no ...$splat).
+		if ( $desc ) {
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					'SELECT * FROM %i WHERE (%d = 0 OR holder_id = %d) AND (%d = 0 OR type = %s) AND (%d = 0 OR visibility = %s) AND (%d = 0 OR end_at_utc <= %s) AND (%d = 0 OR state IN (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)) AND (%d = 0 OR auction_id IN (SELECT ID FROM %i WHERE post_type = %s AND post_title LIKE %s)) ORDER BY %i DESC LIMIT %d OFFSET %d',
+					$table,
+					$p[0], $p[1], $p[2], $p[3], $p[4], $p[5], $p[6], $p[7], $p[8], $p[9],
+					$p[10], $p[11], $p[12], $p[13], $p[14], $p[15], $p[16], $p[17], $p[18], $p[19],
+					$p[20], $p[21], $p[22], $p[23], $p[24], $p[25], $p[26], $p[27], $p[28], $p[29],
+					$p[30], $p[31], $p[32],
+					$orderby,
+					$limit,
+					$offset
+				),
+				ARRAY_A
+			);
+		} else {
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					'SELECT * FROM %i WHERE (%d = 0 OR holder_id = %d) AND (%d = 0 OR type = %s) AND (%d = 0 OR visibility = %s) AND (%d = 0 OR end_at_utc <= %s) AND (%d = 0 OR state IN (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)) AND (%d = 0 OR auction_id IN (SELECT ID FROM %i WHERE post_type = %s AND post_title LIKE %s)) ORDER BY %i ASC LIMIT %d OFFSET %d',
+					$table,
+					$p[0], $p[1], $p[2], $p[3], $p[4], $p[5], $p[6], $p[7], $p[8], $p[9],
+					$p[10], $p[11], $p[12], $p[13], $p[14], $p[15], $p[16], $p[17], $p[18], $p[19],
+					$p[20], $p[21], $p[22], $p[23], $p[24], $p[25], $p[26], $p[27], $p[28], $p[29],
+					$p[30], $p[31], $p[32],
+					$orderby,
+					$limit,
+					$offset
+				),
+				ARRAY_A
+			);
+		}
+
+		$rows = is_array( $rows ) ? $rows : array();
+		wp_cache_set( $cache_key, $rows, QueryCache::GROUP, 45 );
+
+		return $rows;
+	}
+
+	/**
+	 * @param array<int, mixed> $p Exactly 33 filter values from build_filters().
+	 */
+	private function filtered_count( string $table, array $p ): int {
+		global $wpdb;
+
+		if ( 33 !== count( $p ) ) {
+			return 0;
+		}
+
+		$cache_key = QueryCache::key( 'auction_filtered_count', $p );
+		$cached    = wp_cache_get( $cache_key, QueryCache::GROUP );
+		if ( false !== $cached && is_numeric( $cached ) ) {
+			return (int) $cached;
+		}
+
+		$count = $wpdb->get_var(
+			$wpdb->prepare(
+				'SELECT COUNT(*) FROM %i WHERE (%d = 0 OR holder_id = %d) AND (%d = 0 OR type = %s) AND (%d = 0 OR visibility = %s) AND (%d = 0 OR end_at_utc <= %s) AND (%d = 0 OR state IN (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)) AND (%d = 0 OR auction_id IN (SELECT ID FROM %i WHERE post_type = %s AND post_title LIKE %s))',
+				$table,
+				$p[0], $p[1], $p[2], $p[3], $p[4], $p[5], $p[6], $p[7], $p[8], $p[9],
+				$p[10], $p[11], $p[12], $p[13], $p[14], $p[15], $p[16], $p[17], $p[18], $p[19],
+				$p[20], $p[21], $p[22], $p[23], $p[24], $p[25], $p[26], $p[27], $p[28], $p[29],
+				$p[30], $p[31], $p[32]
+			)
 		);
+
+		$count = (int) $count;
+		wp_cache_set( $cache_key, $count, QueryCache::GROUP, 45 );
+
+		return $count;
 	}
 
 	/**
